@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Model checkpoints — large, share via Drive, not git
+backend/models/*
+!backend/models/README.md
+
+# OS / editor
+.DS_Store
+.vscode/
+
+# Env
+.env
