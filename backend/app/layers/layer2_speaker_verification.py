@@ -12,9 +12,13 @@ from Layer 1 = strong impersonation signal.
 """
 
 from speechbrain.inference.speaker import SpeakerRecognition
+from speechbrain.utils.fetching import LocalStrategy
 
 MODEL_SOURCE = "speechbrain/spkrec-ecapa-voxceleb"
-MODEL_SAVEDIR = "backend/models/spkrec-ecapa-voxceleb"
+# Relative to wherever the app process's cwd is (normally backend/, since
+# that's where you run `uvicorn app.main:app` from) — NOT "backend/models/..."
+# which would nest into backend/backend/models/ when run from inside backend/.
+MODEL_SAVEDIR = "models/spkrec-ecapa-voxceleb"
 
 # Below this cosine similarity, treat the voice as NOT matching the
 # claimed/registered identity. Tune this against real dev-set audio —
@@ -25,7 +29,12 @@ MATCH_THRESHOLD = 0.25
 class SpeakerVerifier:
     def __init__(self):
         self.model = SpeakerRecognition.from_hparams(
-            source=MODEL_SOURCE, savedir=MODEL_SAVEDIR
+            source=MODEL_SOURCE,
+            savedir=MODEL_SAVEDIR,
+            # Windows blocks symlink creation without admin/Developer Mode
+            # enabled — copy the files instead. Slightly more disk use,
+            # works everywhere without special permissions.
+            local_strategy=LocalStrategy.COPY,
         )
 
     def compare(self, audio_path: str, reference_path: str) -> dict:

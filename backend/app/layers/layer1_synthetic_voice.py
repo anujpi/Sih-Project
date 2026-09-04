@@ -21,9 +21,10 @@ USAGE NOTES FOR THE TEAM:
 
 import torch
 import torchaudio
+import soundfile as sf
 from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForSequenceClassification
 
-MODEL_PATH = "backend/models/wav2vec2_df"
+MODEL_PATH = "models/wav2vec2_df"  # relative to cwd (backend/) when run via uvicorn
 FALLBACK_MODEL = "facebook/wav2vec2-base"
 TARGET_SR = 16000
 
@@ -50,7 +51,12 @@ class SyntheticVoiceDetector:
         self.model.eval()
 
     def _load_audio(self, path: str) -> torch.Tensor:
-        waveform, sr = torchaudio.load(path)
+        # soundfile (libsndfile) instead of torchaudio.load — avoids
+        # needing torchcodec + a separately-installed system FFmpeg,
+        # which is a pain on Windows. Handles wav/flac natively; for
+        # mp3/m4a convert to wav first (e.g. via VLC or ffmpeg CLI).
+        data, sr = sf.read(path, dtype="float32", always_2d=True)
+        waveform = torch.from_numpy(data.T)  # (channels, samples)
         if waveform.shape[0] > 1:
             waveform = waveform.mean(dim=0, keepdim=True)
         if sr != TARGET_SR:
