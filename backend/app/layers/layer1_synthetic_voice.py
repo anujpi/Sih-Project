@@ -1,22 +1,12 @@
 """
 Layer 1 — Synthetic Voice Detection
 
-Built on the fine-tuning approach from:
-  https://github.com/Sarkarsubham2002/DeepFake-detection-Using-Wav2Vec2
-which fine-tunes facebook/wav2vec2-base (or xls-r) on the In-the-Wild
-deepfake dataset for a real-vs-synthetic binary head.
+Uses a pretrained, already fine-tuned deepfake detector from HuggingFace
+(motheecreator/Deepfake-audio-detection) — no training required.
 
-USAGE NOTES FOR THE TEAM:
-- This module expects a fine-tuned checkpoint at backend/models/wav2vec2_df/.
-  Either:
-    a) fine-tune your own using the referenced repo's training script on
-       ASVspoof2019/In-the-Wild, or
-    b) for the very first demo, swap in the base wav2vec2 model with an
-       UNTRAINED classifier head (works, but scores are meaningless until
-       trained — fine for testing the pipeline wiring, not for the actual
-       demo).
-- Do not commit model checkpoints to git — they're large. Add
-  backend/models/ to .gitignore and share checkpoints via Drive.
+For post-hackathon improvement: fine-tune your own on ASVspoof2019/
+In-the-Wild following https://github.com/Sarkarsubham2002/DeepFake-detection-Using-Wav2Vec2
+for better accuracy on your specific demo scenarios.
 """
 
 import torch
@@ -24,7 +14,7 @@ import torchaudio
 import soundfile as sf
 from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2ForSequenceClassification
 
-MODEL_PATH = "models/wav2vec2_df"  # relative to cwd (backend/) when run via uvicorn
+MODEL_PATH = "motheecreator/Deepfake-audio-detection"  # pretrained deepfake detector, no fine-tuning needed
 FALLBACK_MODEL = "facebook/wav2vec2-base"
 TARGET_SR = 16000
 
@@ -39,8 +29,8 @@ class SyntheticVoiceDetector:
             ).to(self.device)
             self.loaded_finetuned = True
         except Exception:
-            # No fine-tuned checkpoint yet — fall back so the API doesn't
-            # crash during early integration/testing.
+            # Network issue / model unavailable — fall back so the API
+            # doesn't crash. Scores from the fallback are meaningless.
             self.extractor = Wav2Vec2FeatureExtractor.from_pretrained(
                 FALLBACK_MODEL
             )
@@ -49,6 +39,9 @@ class SyntheticVoiceDetector:
             ).to(self.device)
             self.loaded_finetuned = False
         self.model.eval()
+        # Read the model's own label mapping instead of hardcoding
+        # index 0/1 — different checkpoints order labels differently.
+        self.id2label = self.model.config.id2label
 
     def _load_audio(self, path: str) -> torch.Tensor:
         # soundfile (libsndfile) instead of torchaudio.load — avoids
@@ -72,8 +65,18 @@ class SyntheticVoiceDetector:
         logits = self.model(**inputs).logits
         probs = torch.softmax(logits, dim=-1)[0]
 
-        # label convention: 0 = bonafide/real, 1 = synthetic/spoof
-        synthetic_prob = float(probs[1])
+        # Don't hardcode which index means "fake" — read the model's own
+        # label names (varies by checkpoint) and match case-insensitively.
+        synthetic_prob = 0.0
+        for idx, label in self.id2label.items():
+            label_lower = str(label).lower()
+            if any(k in label_lower for k in ("fake", "spoof", "synthetic", "generated")):
+                synthetic_prob = float(probs[int(idx)])
+                break
+        else:
+            # Couldn't identify the "fake" label by name — assume index 1
+            # as a last resort (common convention: 0=real, 1=fake).
+            synthetic_prob = float(probs[1]) if len(probs) > 1 else float(probs[0])
 
         return {
             "synthetic_probability": round(synthetic_prob, 4),
