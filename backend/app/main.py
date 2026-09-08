@@ -9,9 +9,9 @@ Pipeline:
 
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-import tempfile
 import shutil
 import os
+import uuid
 
 from app.layers.layer1_synthetic_voice import SyntheticVoiceDetector
 from app.layers.layer2_speaker_verification import SpeakerVerifier
@@ -34,13 +34,21 @@ speaker_verifier = SpeakerVerifier()
 intent_analyzer = IntentAnalyzer()
 risk_engine = RiskEngine()
 
+# Local, RELATIVE temp folder for uploads (not the system temp dir).
+# Reason: speechbrain's fetch() misparses a Windows absolute path like
+# C:\Users\... as a URL (it sees "C:" and thinks "C" is a URL scheme),
+# which corrupts the path. Relative paths like .tmp_uploads/xyz.wav
+# don't have a drive letter, so they sidestep that bug entirely.
+TMP_DIR = ".tmp_uploads"
+os.makedirs(TMP_DIR, exist_ok=True)
+
 
 def _save_upload(upload: UploadFile) -> str:
     suffix = os.path.splitext(upload.filename or "audio.wav")[1] or ".wav"
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-    with tmp as f:
+    rel_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{suffix}")
+    with open(rel_path, "wb") as f:
         shutil.copyfileobj(upload.file, f)
-    return tmp.name
+    return rel_path
 
 
 @app.get("/health")
