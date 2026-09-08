@@ -1,6 +1,12 @@
 "use client";
 
-import { AudioLines, ScanSearch, ShieldX, UserCheck } from "lucide-react";
+import {
+  AudioLines,
+  FlaskConical,
+  ScanSearch,
+  ShieldX,
+  UserCheck,
+} from "lucide-react";
 import { SCENARIOS } from "@/lib/demo-scenarios";
 import { ScenarioType } from "@/lib/types";
 import { TIER_META } from "@/lib/risk-utils";
@@ -25,13 +31,19 @@ export default function ScenarioSelector({
 }: ScenarioSelectorProps) {
   return (
     <section aria-labelledby="scenario-heading" className="space-y-4">
-      <header>
-        <h3 id="scenario-heading" className="text-base font-semibold text-vn-text">
-          Choose a scenario
-        </h3>
-        <p className="mt-1 text-sm text-vn-muted">
-          Select a simulated call to pipe through all four intelligence layers.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 id="scenario-heading" className="text-base font-semibold text-vn-navy">
+            Choose a scenario
+          </h3>
+          <p className="mt-1 text-sm text-vn-muted">
+            Select a simulated call to pipe through all four intelligence layers.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-vn-primary/25 bg-vn-primary/8 px-3 py-1 text-[11px] font-medium text-vn-primary">
+          <FlaskConical className="h-3.5 w-3.5" aria-hidden="true" />
+          Demo scenarios
+        </span>
       </header>
 
       <div
@@ -44,46 +56,60 @@ export default function ScenarioSelector({
           const isActive = value === scenario.type;
           const tierMeta = TIER_META[scenario.expectedTier];
           return (
-            <button
+            <div
               key={scenario.type}
-              type="button"
-              role="radio"
-              aria-checked={isActive}
-              disabled={disabled}
-              onClick={() => onChange(scenario.type)}
-              className={`group relative flex flex-col items-start gap-2.5 rounded-xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`group relative flex h-full flex-col rounded-[var(--radius-card)] border p-5 text-left transition-all focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-vn-cyan ${
                 isActive
                   ? "border-vn-cyan/60 bg-vn-cyan/10 shadow-lg shadow-vn-cyan/10"
-                  : "border-vn-border bg-vn-surface/50 hover:-translate-y-0.5 hover:border-vn-cyan/30 hover:bg-vn-surface/70 hover:shadow-lg hover:shadow-vn-cyan/5"
+                  : "border-vn-border bg-white hover:-translate-y-0.5 hover:border-vn-cyan/40 hover:shadow-lg hover:shadow-vn-cyan/5"
               }`}
             >
-              <span
-                className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
-                  isActive ? "bg-vn-cyan/20 text-vn-cyan" : "bg-white/5 text-vn-muted group-hover:text-vn-cyan"
-                }`}
-              >
-                <Icon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="text-sm font-bold text-vn-text">{scenario.label}</span>
-              <span className="text-xs leading-relaxed text-vn-muted">
+              <div className="flex items-start justify-between gap-2">
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                    isActive
+                      ? "bg-vn-cyan/20 text-vn-cyan"
+                      : "bg-vn-page text-vn-muted group-hover:text-vn-cyan"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="rounded border border-vn-border bg-vn-page px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-vn-muted">
+                  DEMO
+                </span>
+              </div>
+
+              <h4 className="mt-3 text-sm font-bold text-vn-navy">{scenario.label}</h4>
+              <p className="mt-1 text-xs leading-relaxed text-vn-muted">
                 {scenario.description}
-              </span>
-              <span className="mt-auto flex w-full items-center justify-between gap-2">
+              </p>
+
+              <div className="mt-3 flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${tierMeta.badgeClass}`}
                 >
                   <span className={`h-1.5 w-1.5 rounded-full ${tierMeta.dotClass}`} aria-hidden="true" />
-                  {tierMeta.label} risk tier
+                  {tierMeta.label} risk
                 </span>
-                <span
-                  className={`text-[11px] font-medium ${
-                    isActive ? "text-vn-cyan" : "text-vn-muted opacity-0 transition-opacity group-hover:opacity-100"
+              </div>
+
+              <div className="mt-4 flex flex-1 items-end">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={isActive}
+                  disabled={disabled}
+                  onClick={() => onChange(scenario.type)}
+                  className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan disabled:cursor-not-allowed disabled:opacity-50 ${
+                    isActive
+                      ? "bg-gradient-to-r from-vn-cyan to-vn-indigo text-white shadow-lg shadow-vn-cyan/20"
+                      : "border border-vn-border bg-white text-vn-navy hover:border-vn-cyan/40 hover:text-vn-cyan"
                   }`}
                 >
-                  Load scenario →
-                </span>
-              </span>
-            </button>
+                  {isActive ? "Scenario selected" : "Load Scenario"}
+                </button>
+              </div>
+            </div>
           );
         })}
       </div>

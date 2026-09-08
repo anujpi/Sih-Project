@@ -218,6 +218,70 @@ export function getDemoResponse(scenario: ScenarioType): AnalysisResponse {
   return JSON.parse(JSON.stringify(mockResponses[scenario])) as AnalysisResponse;
 }
 
+export interface StreamEvent {
+  message: string;
+  layer?: "voice" | "identity" | "intent" | "risk";
+  type?: "info" | "warning" | "success" | "progress";
+  delayMs: number;
+}
+
+const STREAM_EVENTS: Record<ScenarioType, StreamEvent[]> = {
+  genuine: [
+    { message: "Listening for signal", layer: "voice", type: "progress", delayMs: 300 },
+    { message: "Analyzing audio chunk 01", layer: "voice", delayMs: 600 },
+    { message: "Voice authenticity: 8% synthetic probability", layer: "voice", type: "success", delayMs: 700 },
+    { message: "Identity comparison started", layer: "identity", delayMs: 600 },
+    { message: "Transcript updated", layer: "intent", delayMs: 500 },
+    { message: "No risk signals detected in transcript", layer: "intent", type: "info", delayMs: 700 },
+    { message: "Risk score recalculated", layer: "risk", delayMs: 600 },
+    { message: "Interaction risk is low — continue normally", layer: "risk", type: "success", delayMs: 700 },
+  ],
+  ai_cloned: [
+    { message: "Listening for signal", layer: "voice", type: "progress", delayMs: 300 },
+    { message: "Analyzing audio chunk 01", layer: "voice", delayMs: 600 },
+    { message: "Voice authenticity: 91% synthetic probability", layer: "voice", type: "warning", delayMs: 700 },
+    { message: "Acoustic anomaly detected", layer: "voice", type: "warning", delayMs: 500 },
+    { message: "Identity comparison in progress", layer: "identity", delayMs: 600 },
+    { message: "Voice similarity: 23% — mismatch detected", layer: "identity", type: "warning", delayMs: 700 },
+    { message: "Transcript updated", layer: "intent", delayMs: 500 },
+    { message: "Urgency indicator detected", layer: "intent", type: "warning", delayMs: 600 },
+    { message: "Risk score recalculated to 72%", layer: "risk", type: "warning", delayMs: 700 },
+    { message: "Verification protocol recommended", layer: "risk", type: "info", delayMs: 700 },
+  ],
+  ai_cloned_scam: [
+    { message: "Listening for signal", layer: "voice", type: "progress", delayMs: 300 },
+    { message: "Analyzing audio chunk 01", layer: "voice", delayMs: 600 },
+    { message: "Voice authenticity: 94% synthetic probability", layer: "voice", type: "warning", delayMs: 700 },
+    { message: "Acoustic anomaly detected", layer: "voice", type: "warning", delayMs: 500 },
+    { message: "Identity comparison started", layer: "identity", delayMs: 600 },
+    { message: "Voice similarity: 23% — mismatch detected", layer: "identity", type: "warning", delayMs: 700 },
+    { message: "Transcript updated", layer: "intent", delayMs: 500 },
+    { message: "Financial-request indicator detected", layer: "intent", type: "warning", delayMs: 600 },
+    { message: "Urgency indicator detected", layer: "intent", type: "warning", delayMs: 500 },
+    { message: "OTP request detected", layer: "intent", type: "warning", delayMs: 600 },
+    { message: "Secrecy request detected", layer: "intent", type: "warning", delayMs: 500 },
+    { message: "Risk score recalculated to 94%", layer: "risk", type: "warning", delayMs: 700 },
+    { message: "Verification protocol recommended", layer: "risk", type: "info", delayMs: 700 },
+  ],
+  known_person_mismatch: [
+    { message: "Listening for signal", layer: "voice", type: "progress", delayMs: 300 },
+    { message: "Analyzing audio chunk 01", layer: "voice", delayMs: 600 },
+    { message: "Voice authenticity: 15% synthetic probability", layer: "voice", type: "info", delayMs: 700 },
+    { message: "Identity comparison started", layer: "identity", delayMs: 600 },
+    { message: "Voice similarity: 23% — mismatch detected", layer: "identity", type: "warning", delayMs: 700 },
+    { message: "Transcript updated", layer: "intent", delayMs: 500 },
+    { message: "Financial-request indicator detected", layer: "intent", type: "warning", delayMs: 600 },
+    { message: "Urgency indicator detected", layer: "intent", type: "warning", delayMs: 500 },
+    { message: "Authority claim detected", layer: "intent", type: "warning", delayMs: 600 },
+    { message: "Risk score recalculated to 68%", layer: "risk", type: "warning", delayMs: 700 },
+    { message: "Verification protocol recommended", layer: "risk", type: "info", delayMs: 700 },
+  ],
+};
+
+export function getStreamEvents(scenario: ScenarioType): StreamEvent[] {
+  return STREAM_EVENTS[scenario];
+}
+
 /**
  * Simulation-only network delay for a believable demo pipeline.
  * Fast enough to keep a live presentation snappy.

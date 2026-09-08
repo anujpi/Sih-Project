@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const NAV_LINKS = [
-  { href: "#how-it-works", label: "How it works" },
+  { href: "/#product", label: "Product" },
+  { href: "/how-it-works", label: "How It Works" },
   { href: "/demo", label: "Live Demo" },
-  { href: "#technology", label: "Technology" },
-  { href: "#about", label: "About" },
+  { href: "/#technology", label: "Technology" },
+  { href: "/#about", label: "About" },
 ];
 
 export default function SiteNavbar() {
@@ -26,55 +27,45 @@ export default function SiteNavbar() {
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "border-b border-vn-border bg-vn-navy/85 backdrop-blur-xl shadow-lg shadow-black/20"
-          : "bg-transparent"
+          ? "border-b border-vn-border bg-white/90 backdrop-blur-xl shadow-sm shadow-vn-navy/5"
+          : "bg-white/60 backdrop-blur-md"
       }`}
     >
       <div className="vn-container flex items-center justify-between gap-4 py-3">
-        <a href="#top" className="flex items-center gap-2" aria-label="VAANISHIELD home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-vn-cyan to-vn-indigo text-vn-navy shadow-lg shadow-vn-cyan/20">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="VAANISHIELD home">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-vn-navy text-white shadow-sm">
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>
-          <span className="font-mono text-base font-bold tracking-wide text-vn-text">
+          <span className="font-mono text-base font-bold tracking-wide text-vn-navy">
             VAANISHIELD
           </span>
-        </a>
+        </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-          {NAV_LINKS.map((link) =>
-            link.href.startsWith("#") ? (
-              <a
-                key={link.label}
-                href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-vn-muted transition-colors hover:text-vn-text hover:bg-white/5"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-vn-muted transition-colors hover:text-vn-text hover:bg-white/5"
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-vn-secondary transition-colors hover:text-vn-navy hover:bg-vn-surface-blue"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex items-center gap-2">
           <Link
             href="/demo"
-            className="hidden rounded-xl bg-gradient-to-r from-vn-cyan to-vn-indigo px-4 py-2 text-sm font-bold text-white shadow-lg shadow-vn-cyan/20 transition-all hover:shadow-vn-cyan/40 hover:brightness-110 sm:inline-flex"
+            className="hidden rounded-xl bg-vn-navy px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep hover:shadow-md sm:inline-flex"
           >
-            Try Live Demo
+            Run a Safety Check
           </Link>
           <button
             type="button"
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}
-            className="rounded-lg border border-vn-border bg-white/5 p-2 text-vn-text md:hidden"
+            className="rounded-lg border border-vn-border bg-white p-2 text-vn-navy md:hidden"
           >
             {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
@@ -84,25 +75,25 @@ export default function SiteNavbar() {
       {open && (
         <nav
           aria-label="Mobile"
-          className="border-t border-vn-border bg-vn-navy/95 px-4 py-3 backdrop-blur-xl md:hidden"
+          className="border-t border-vn-border bg-white px-4 py-3 backdrop-blur-xl md:hidden"
         >
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-vn-muted transition-colors hover:text-vn-text hover:bg-white/5"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-vn-secondary transition-colors hover:text-vn-navy hover:bg-vn-surface-blue"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <Link
               href="/demo"
               onClick={() => setOpen(false)}
-              className="mt-1 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-vn-cyan to-vn-indigo px-4 py-2.5 text-sm font-bold text-white"
+              className="mt-1 inline-flex items-center justify-center rounded-xl bg-vn-navy px-4 py-2.5 text-sm font-bold text-white"
             >
-              Try Live Demo
+              Run a Safety Check
             </Link>
           </div>
         </nav>

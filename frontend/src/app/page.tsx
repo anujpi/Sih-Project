@@ -1,6 +1,7 @@
 import SiteNavbar from "@/components/site-navbar";
 import HeroSection from "@/components/hero-section";
-import FeatureGrid from "@/components/feature-grid";
+import ProductTour from "@/components/product-tour";
+import LayerStepper from "@/components/layer-stepper";
 import ProblemSection from "@/components/problem-section";
 import PipelineVisual from "@/components/pipeline-visual";
 import ComparisonSection from "@/components/comparison-section";
@@ -10,11 +11,12 @@ import Footer from "@/components/footer";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen bg-vn-navy text-vn-text">
+    <div className="relative min-h-screen">
       <SiteNavbar />
       <main>
         <HeroSection />
-        <FeatureGrid />
+        <ProductTour />
+        <LayerStepper />
         <ProblemSection />
         <PipelineVisual />
         <ComparisonSection />

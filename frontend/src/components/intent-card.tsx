@@ -17,14 +17,14 @@ export default function IntentCard({ result }: { result: AnalysisResponse }) {
   const triggered = intent.triggered_intents ?? [];
   const intentScore = normalizeScore(intent.intent_risk_score);
   const risky = intentScore >= 50;
-  const color = risky ? "#f43f5e" : "#34d399";
+  const color = risky ? "#D92D4F" : "#159A6B";
   const highlighted = highlightTranscript(intent.transcript);
 
   return (
     <EvidenceCard
       id="intent-analysis-card"
       title="Speech-to-text + intent"
-      accent="violet"
+      accent="indigo"
       icon={<MessageSquareText className="h-5 w-5" aria-hidden="true" />}
       statusLabel={
         triggered.length > 0
@@ -34,8 +34,7 @@ export default function IntentCard({ result }: { result: AnalysisResponse }) {
       statusVariant={risky ? "processing" : "ok"}
       summary={
         <div className="space-y-4">
-          {/* Transcript panel */}
-          <div className="rounded-xl border border-vn-border bg-vn-navy/50 p-3.5">
+          <div className="rounded-xl border border-vn-border bg-white p-3.5">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-vn-muted">
                 Transcript
@@ -44,7 +43,7 @@ export default function IntentCard({ result }: { result: AnalysisResponse }) {
                 type="button"
                 aria-expanded={transcriptOpen}
                 onClick={() => setTranscriptOpen((v) => !v)}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-vn-cyan transition-colors hover:text-vn-violet"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-vn-cyan transition-colors hover:text-vn-primary"
               >
                 {transcriptOpen ? "Collapse" : "Expand"}
                 <ChevronDown
@@ -54,14 +53,13 @@ export default function IntentCard({ result }: { result: AnalysisResponse }) {
               </button>
             </div>
             <p
-              className={`mt-2 text-sm leading-relaxed text-vn-text/90 ${
+              className={`mt-2 text-sm leading-relaxed text-vn-secondary ${
                 transcriptOpen ? "" : "line-clamp-3"
               }`}
               dangerouslySetInnerHTML={{ __html: highlighted }}
             />
           </div>
 
-          {/* Intent chips */}
           {triggered.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {triggered.map((flag) => (
@@ -80,7 +78,6 @@ export default function IntentCard({ result }: { result: AnalysisResponse }) {
             </p>
           )}
 
-          {/* Risk score */}
           <div className="space-y-1.5">
             <KeyValue
               label="Intent risk score"

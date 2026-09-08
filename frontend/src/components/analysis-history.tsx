@@ -44,10 +44,10 @@ export default function AnalysisHistory({
   }
 
   return (
-    <section aria-labelledby="history-heading" className="glass-panel rounded-2xl p-5 sm:p-6">
+    <section aria-labelledby="history-heading" className="card-surface rounded-2xl p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 id="history-heading" className="text-base font-semibold text-vn-text">
+          <h3 id="history-heading" className="text-base font-semibold text-vn-navy">
             Recent analyses
           </h3>
           <p className="mt-0.5 text-xs text-vn-muted">Stored locally in this browser.</p>
@@ -59,7 +59,7 @@ export default function AnalysisHistory({
             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
               confirmClear
                 ? "border-vn-red/50 bg-vn-red/15 text-vn-red"
-                : "border-vn-border bg-white/5 text-vn-muted hover:text-vn-text"
+                : "border-vn-border bg-white text-vn-muted hover:text-vn-navy"
             }`}
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -69,7 +69,7 @@ export default function AnalysisHistory({
       </div>
 
       {analyses.length === 0 ? (
-        <div className="mt-5 rounded-xl border border-dashed border-vn-border bg-vn-navy/40 px-4 py-8 text-center">
+        <div className="mt-5 rounded-xl border border-dashed border-vn-border bg-vn-page px-4 py-8 text-center">
           <Clock className="mx-auto h-6 w-6 text-vn-muted" aria-hidden="true" />
           <p className="mt-2 text-sm text-vn-muted">
             No analyses yet. Run a scenario to build your history.
@@ -82,7 +82,7 @@ export default function AnalysisHistory({
             return (
               <li
                 key={record.id}
-                className="flex items-center gap-3 rounded-xl border border-vn-border bg-vn-navy/40 p-3 transition-colors hover:border-vn-cyan/30"
+                className="flex items-center gap-3 rounded-xl border border-vn-border bg-white p-3 transition-colors hover:border-vn-cyan/30"
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
@@ -92,7 +92,7 @@ export default function AnalysisHistory({
                   {TIER_ICON[record.tier]}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-vn-text">
+                  <p className="truncate text-sm font-semibold text-vn-navy">
                     {record.scenario}
                   </p>
                   <p className="text-[11px] text-vn-muted">
@@ -108,7 +108,7 @@ export default function AnalysisHistory({
                 <button
                   type="button"
                   onClick={() => handleReplay(record)}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-vn-border bg-white/5 px-3 py-1.5 text-xs font-semibold text-vn-cyan transition-colors hover:bg-vn-cyan/10"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-vn-border bg-white px-3 py-1.5 text-xs font-semibold text-vn-cyan transition-colors hover:bg-vn-cyan/10"
                 >
                   <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                   View result

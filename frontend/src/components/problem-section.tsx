@@ -28,10 +28,10 @@ export default function ProblemSection() {
               <p className="font-mono text-xs font-semibold uppercase tracking-widest text-vn-amber">
                 The problem
               </p>
-              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-vn-text sm:text-4xl">
-                Voice cloning turns identity fraud into personal
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-vn-navy sm:text-4xl">
+                Voice cloning turns identity fraud personal
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-vn-muted">
+              <p className="mt-4 text-base leading-relaxed text-vn-secondary">
                 A few seconds of someone&apos;s voice is enough to impersonate a parent, a
                 manager, or an authority figure. Defending against real-versus-fake audio alone
                 misses the point — the attacker is not trying to fool a model, they are trying to
@@ -45,13 +45,13 @@ export default function ProblemSection() {
               const Icon = index === 2 ? UserX2 : Quote;
               return (
                 <Reveal key={item.title} delay={index * 90}>
-                  <div className="flex items-start gap-4 rounded-2xl border border-vn-border bg-vn-surface/50 p-5 transition-all hover:border-vn-amber/30 hover:bg-vn-surface/70">
+                  <div className="flex items-start gap-4 rounded-2xl border border-vn-border bg-white p-5 transition-all hover:border-vn-amber/30 hover:shadow-md">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-vn-amber/10 text-vn-amber">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div>
-                      <h3 className="text-sm font-bold text-vn-text">{item.title}</h3>
-                      <p className="mt-1 text-sm leading-relaxed text-vn-muted">{item.copy}</p>
+                      <h3 className="text-sm font-bold text-vn-navy">{item.title}</h3>
+                      <p className="mt-1 text-sm leading-relaxed text-vn-secondary">{item.copy}</p>
                     </div>
                   </div>
                 </Reveal>
@@ -61,28 +61,14 @@ export default function ProblemSection() {
         </div>
 
         <Reveal delay={120}>
-          <figure className="relative mx-auto mt-14 max-w-4xl overflow-hidden rounded-2xl border border-vn-cyan/25 bg-vn-midnight/60 p-8 text-center sm:p-12">
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(60% 120% at 50% 0%, rgba(56,214,255,0.1), transparent 60%)",
-              }}
-              aria-hidden="true"
-            />
-            <Quote className="mx-auto h-8 w-8 text-vn-cyan/60" aria-hidden="true" />
-            <blockquote className="relative mt-4 text-xl font-bold leading-snug tracking-tight text-vn-text sm:text-2xl">
-              The real question is not{" "}
-              <span className="text-vn-muted line-through decoration-vn-red/60">
-                “Is this audio fake?”
-              </span>
-              <br className="hidden sm:block" /> It is{" "}
-              <span className="bg-gradient-to-r from-vn-cyan to-vn-violet bg-clip-text text-transparent">
-                “Is this interaction safe?”
-              </span>
+          <figure className="relative mx-auto mt-14 max-w-4xl overflow-hidden rounded-2xl border border-vn-border bg-white p-8 text-center sm:p-12 shadow-sm">
+            <Quote className="mx-auto h-8 w-8 text-vn-primary/40" aria-hidden="true" />
+            <blockquote className="relative mt-4 text-xl font-bold leading-snug tracking-tight text-vn-navy sm:text-2xl">
+              When a voice can be cloned,{" "}
+              <span className="text-vn-secondary">voice alone</span> cannot be trusted.
             </blockquote>
             <figcaption className="relative mt-4 text-xs font-medium tracking-widest text-vn-muted">
-              THE QUESTION VAANISHIELD IS BUILT TO ANSWER
+              THE PRINCIPLE BEHIND VAANISHIELD
             </figcaption>
           </figure>
         </Reveal>

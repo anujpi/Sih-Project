@@ -53,15 +53,14 @@ export default function RiskEngineCard({ result }: { result: AnalysisResponse })
             </span>
           </div>
 
-          {/* Contribution chart */}
           <div className="space-y-2.5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-vn-muted">
               Contribution
             </p>
             {[
-              { label: "Voice authenticity risk", value: voiceRisk, color: "#38d6ff" },
-              { label: "Identity mismatch risk", value: identityRisk, color: "#6c63ff" },
-              { label: "Intent risk", value: intentRisk, color: "#a78bfa" },
+              { label: "Voice authenticity risk", value: voiceRisk, color: "#2F80ED" },
+              { label: "Identity mismatch risk", value: identityRisk, color: "#5B5FEF" },
+              { label: "Intent risk", value: intentRisk, color: "#5B5FEF" },
             ].map((row) => (
               <div key={row.label} className="space-y-1">
                 <KeyValue
@@ -78,7 +77,7 @@ export default function RiskEngineCard({ result }: { result: AnalysisResponse })
             ))}
           </div>
 
-          <p className="rounded-lg border border-vn-border bg-vn-navy/50 px-3 py-2.5 text-xs leading-relaxed text-vn-muted">
+          <p className="rounded-lg border border-vn-border bg-white px-3 py-2.5 text-xs leading-relaxed text-vn-muted">
             {risk.response}
           </p>
         </div>

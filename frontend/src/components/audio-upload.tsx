@@ -13,7 +13,7 @@ import {
   MAX_FILE_SIZE_MB,
   validateAudioFile,
 } from "@/lib/api-client";
-import { FileAudio, UploadCloud, UserRound, Zap } from "lucide-react";
+import { ChevronDown, FileAudio, UploadCloud, UserRound, Zap } from "lucide-react";
 
 export interface AnalysisInputState {
   scenario: ScenarioType;
@@ -44,6 +44,7 @@ export default function AudioUpload({
   const [audioError, setAudioError] = useState<string | null>(null);
   const [refError, setRefError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [refOpen, setRefOpen] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
@@ -220,25 +221,24 @@ export default function AudioUpload({
   return (
     <section
       aria-labelledby="audio-input-heading"
-      className="glass-panel rounded-2xl"
+      className="card-surface rounded-2xl"
     >
       <div className="space-y-6 p-5 sm:p-6">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <h3 id="audio-input-heading" className="text-base font-semibold text-vn-text">
+            <h3 id="audio-input-heading" className="text-base font-semibold text-vn-navy">
               Call audio
             </h3>
             <p className="mt-1 text-sm text-vn-muted">
               Upload, drop, or record the voice interaction you want VAANISHIELD to analyze.
             </p>
           </div>
-          <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-vn-violet/30 bg-vn-violet/10 px-2.5 py-1 text-[11px] font-medium text-vn-violet sm:inline-flex">
+          <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-vn-primary/25 bg-vn-primary/8 px-2.5 py-1 text-[11px] font-medium text-vn-primary sm:inline-flex">
             <Zap className="h-3 w-3" aria-hidden="true" />
             {isDemoRun ? "Demo input" : "Live input"}
           </span>
         </header>
 
-        {/* Drop zone + browse */}
         <div
           role="button"
           tabIndex={0}
@@ -253,29 +253,33 @@ export default function AudioUpload({
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
-          className={`flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan ${
+          className={`flex min-h-40 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan ${
             dragging
               ? "border-vn-cyan bg-vn-cyan/10"
-              : "border-vn-border bg-vn-navy/40 hover:border-vn-cyan/50 hover:bg-vn-cyan/5"
+              : "border-vn-border bg-vn-surface-blue/60 hover:border-vn-cyan/50 hover:bg-vn-cyan/5"
           }`}
         >
           {hasAudio ? (
             <>
-              <FileAudio className="h-7 w-7 text-vn-cyan" aria-hidden="true" />
-              <span className="text-sm font-medium text-vn-text">{value.audioFile!.name}</span>
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-vn-cyan/15 text-vn-cyan">
+                <FileAudio className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span className="text-sm font-medium text-vn-navy">{value.audioFile!.name}</span>
               <span className="text-xs text-vn-muted">
                 {formatBytes(value.audioFile!.size)} — click to replace
               </span>
             </>
           ) : (
             <>
-              <UploadCloud className="h-7 w-7 text-vn-cyan" aria-hidden="true" />
-              <span className="text-sm font-semibold text-vn-text">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-vn-cyan/20 to-vn-indigo/20 text-vn-cyan">
+                <UploadCloud className="h-7 w-7" aria-hidden="true" />
+              </span>
+              <span className="text-sm font-semibold text-vn-navy sm:text-base">
                 Drag & drop audio, or{" "}
                 <span className="text-vn-cyan underline underline-offset-2">browse files</span>
               </span>
-              <span className="text-xs text-vn-muted">
-                WAV · MP3 · OGG · WebM — max {MAX_FILE_SIZE_MB} MB
+              <span className="rounded-full border border-vn-border bg-vn-page px-3 py-1 font-mono text-[11px] text-vn-muted">
+                WAV · MP3 · M4A · OGG · WebM — max {MAX_FILE_SIZE_MB} MB
               </span>
             </>
           )}
@@ -298,8 +302,7 @@ export default function AudioUpload({
           </p>
         )}
 
-        {/* Visualizer + controls */}
-        <div className="rounded-xl border border-vn-border bg-vn-navy/50 p-4">
+        <div className="rounded-xl border border-vn-border bg-white p-4">
           <AudioVisualizer active={isRecording || isPlaying} bars={36} />
           <div className="mt-3">
             <AudioReviewControls
@@ -324,7 +327,6 @@ export default function AudioUpload({
               onStopRecording={() => toggleRecording()}
             />
           </div>
-          {/* Hidden element keeps playback state; we drive it imperatively */}
           {value.audioFile && audioObjectUrl && (
             <audio
               ref={audioElRef}
@@ -338,78 +340,99 @@ export default function AudioUpload({
           )}
         </div>
 
-        {/* Reference + identity */}
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <label htmlFor="claimed-identity" className="text-sm font-medium text-vn-text">
-                Claimed identity
-              </label>
-              <span className="text-[11px] text-vn-muted">optional</span>
-            </div>
-            <select
-              id="claimed-identity"
-              value={value.claimedIdentity}
-              onChange={(e) => setClaimed(e.target.value)}
-              className="w-full rounded-lg border border-vn-border bg-vn-navy/60 px-3 py-2 text-sm text-vn-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan"
-            >
-              {CLAIMED_IDENTITY_OPTIONS.map((id) => (
-                <option key={id} value={id}>
-                  {id}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs leading-relaxed text-vn-muted">
-              When set, Layer 2 compares the caller against this registered identity.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="reference-audio" className="text-sm font-medium text-vn-text">
-              Reference voice <span className="text-vn-muted">(trusted sample)</span>
-            </label>
-            <label
-              htmlFor="reference-audio"
-              className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-vn-border bg-vn-navy/40 px-3 py-2 text-sm text-vn-muted transition-colors hover:border-vn-cyan/50 hover:text-vn-text"
-            >
+        <div className="rounded-xl border border-vn-border bg-white">
+          <button
+            type="button"
+            aria-expanded={refOpen}
+            onClick={() => setRefOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+          >
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-vn-navy">
               <UserRound className="h-4 w-4 text-vn-cyan" aria-hidden="true" />
-              {hasReference
-                ? value.referenceAudioFile!.name
-                : "Upload known speaker sample"}
-              <input
-                id="reference-audio"
-                ref={refInputRef}
-                type="file"
-                accept={ACCEPTED_TYPES.join(",")}
-                className="sr-only"
-                aria-label="Upload reference voice audio file"
-                onChange={(e) => {
-                  handleReferenceFile(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            {refError && (
-              <p role="alert" className="text-xs text-vn-red">
-                {refError}
-              </p>
-            )}
-            {hasReference && !refError && (
-              <button
-                type="button"
-                className="text-xs text-vn-muted underline underline-offset-2 transition-colors hover:text-vn-red"
-                onClick={() => {
-                  setReference(null);
-                  push("info", "Reference voice cleared");
-                }}
-              >
-                Remove reference voice
-              </button>
-            )}
-          </div>
+              Add identity reference
+              <span className="rounded-full border border-vn-border bg-vn-page px-2 py-0.5 text-[10px] text-vn-muted">
+                optional
+              </span>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-vn-muted transition-transform ${refOpen ? "rotate-180" : ""}`}
+              aria-hidden="true"
+            />
+          </button>
+
+          {refOpen && (
+            <div className="grid gap-5 border-t border-vn-border p-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="claimed-identity" className="text-sm font-medium text-vn-navy">
+                    Claimed identity
+                  </label>
+                  <span className="text-[11px] text-vn-muted">optional</span>
+                </div>
+                <select
+                  id="claimed-identity"
+                  value={value.claimedIdentity}
+                  onChange={(e) => setClaimed(e.target.value)}
+                  className="w-full rounded-lg border border-vn-border bg-vn-surface-blue/60 px-3 py-2 text-sm text-vn-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan"
+                >
+                  {CLAIMED_IDENTITY_OPTIONS.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs leading-relaxed text-vn-muted">
+                  When set, Layer 2 compares the caller against this registered identity.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="reference-audio" className="text-sm font-medium text-vn-navy">
+                  Reference voice <span className="text-vn-muted">(trusted sample)</span>
+                </label>
+                <label
+                  htmlFor="reference-audio"
+                  className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-vn-border bg-vn-surface-blue/60 px-3 py-2 text-sm text-vn-muted transition-colors hover:border-vn-cyan/50 hover:text-vn-navy"
+                >
+                  <UserRound className="h-4 w-4 text-vn-cyan" aria-hidden="true" />
+                  {hasReference
+                    ? value.referenceAudioFile!.name
+                    : "Upload known speaker sample"}
+                  <input
+                    id="reference-audio"
+                    ref={refInputRef}
+                    type="file"
+                    accept={ACCEPTED_TYPES.join(",")}
+                    className="sr-only"
+                    aria-label="Upload reference voice audio file"
+                    onChange={(e) => {
+                      handleReferenceFile(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {refError && (
+                  <p role="alert" className="text-xs text-vn-red">
+                    {refError}
+                  </p>
+                )}
+                {hasReference && !refError && (
+                  <button
+                    type="button"
+                    className="text-xs text-vn-muted underline underline-offset-2 transition-colors hover:text-vn-red"
+                    onClick={() => {
+                      setReference(null);
+                      push("info", "Reference voice cleared");
+                    }}
+                  >
+                    Remove reference voice
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Analyze CTA */}
         <div className="flex flex-col gap-3 border-t border-vn-border pt-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-md text-xs leading-relaxed text-vn-muted">
             {isDemoRun

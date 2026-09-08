@@ -4,13 +4,15 @@ Polished, interactive voice-impersonation defense website — Next.js 16 + TypeS
 
 Live at `http://localhost:3000`.
 
-## Two connected experiences
+## Connected experiences
 
-**1. Product landing page (`/`)** — a premium cybersecurity site that explains the product in seconds: the "when a voice can be cloned, voice alone cannot be trusted" hero, an animated shield/waveform illustration, stats row, the four intelligence layers, the detection-to-prevention pipeline, a comparison against basic deepfake detectors, and a final CTA into the demo.
+**1. Product landing page (`/`)** — the "when a voice can be cloned, voice alone cannot be trusted" hero with a state-aware **Live Guard** instrument panel (scan ring, navy shield + risk score, animated waveform, interactive Voice / Identity / Intent / Risk nodes), a **Product Tour** first-run stepper, an interactive **Layer Stepper** (91% synthetic / 23% similarity / High financial request / Critical overall risk), a clickable detection-to-prevention pipeline, a comparison against basic deepfake detectors, an India-focused language roadmap, and a final CTA into the console.
 
-**Landing page (`/`)** — hero with the interactive **Live Guard** widget (animated waveform → shield → risk meter, with hoverable Voice/Identity/Intent/Context signals), product-pillar cards, a problem section, a clickable detection-to-prevention pipeline, the comparison table, the India language roadmap, and a final CTA into the console.
+**2. Live console (`/demo`)** — a **3-stage decision-first workspace**: *Prepare* (scenario selector → audio upload with drag-drop / browse / mic recording / optional reference identity) → *Analyze* (streaming signal board where voice authenticity and identity run in parallel, a live event timeline, and a streaming transcript with risk-term highlighting) → *Decide* (animated risk gauge + count-up, evidence cards, and an adaptive verification stepper). A sticky secondary panel holds a windowed **Live Guard**, a safety verdict snapshot, an **Advanced & settings** drawer (run-mode tabs, backend status from `GET /health`, recent analyses), and the prototype notice.
 
-**Live console (`/demo`)** — a two-zone layout: the main workspace (scenarios, audio input, transcript preview, pipeline, result hero, evidence cards, verification panel) plus a sticky sidebar (run-mode toggle, backend status from `GET /health`, recent analyses, prototype notice).
+**3. How it works (`/how-it-works`)** — a deep interactive walkthrough of the four intelligence layers and the pipeline.
+
+**4. Insights (`/insights`)** — a local-only dashboard of your analysis history (stats, risk distribution, recent analyses with replay), persisted in `localStorage`.
 
 ## What the demo shows
 
@@ -21,7 +23,9 @@ VAANISHIELD is **not** a binary real/fake audio classifier. It combines **four s
 3. **Speech-to-Text + Intent** — transcript plus scam-pressure flags (OTP, financial request, urgency, authority claim, secrecy)
 4. **Unified Risk Engine** — weighted, explainable risk score + tier + plain-language response
 
-When risk is High or Critical, an **Adaptive Verification** workflow drops in: verification phrase, trusted-contact confirmation, secondary-channel check, registered-device consistency, and actions (Mark as Verified / Keep Blocked / Dismiss Warning). For Critical, the UI emphasizes **never share OTPs, passwords, or money** before independent verification. All interception, messaging, and financial blocking actions are **simulated prototype actions** — no real telecom/SMS/financial operations are performed.
+When risk is High or Critical, an **Adaptive Verification stepper** drops in: pick a channel (verification phrase, trusted contact, secondary channel, registered device), watch the *simulated* out-of-band confirmation, then resolve with **Mark as Verified / Keep Interaction Blocked / Dismiss Warning**. For Critical, the UI emphasizes **never share OTPs, passwords, or money** before independent verification. All interception, messaging, and financial blocking actions are **simulated prototype actions** — no real telecom/SMS/financial operations are performed.
+
+Live Guard transitions mirror the analysis lifecycle: idle → scanning → low / medium / high / critical / error, so the sidebar instrument always reflects what the pipeline is doing.
 
 ## Running it
 
@@ -65,9 +69,9 @@ API docs: `http://localhost:8000/docs`.
 The console works fully offline:
 
 1. Run `npm run dev` with no backend.
-2. Confirm the **Demo Mode** toggle in the sidebar (default).
-3. Pick any scenario card, then click **Analyze Voice Interaction**.
-4. Demo results are labeled **Demo** so judges can distinguish mock data from real inference.
+2. Confirm the **Demo Mode** toggle in the Advanced drawer (default).
+3. Pick any scenario card, click **Load Scenario**, then **Analyze Voice Interaction**.
+4. Demo results are labeled **Demo Scenario** so judges can distinguish mock data from real inference.
 5. Switch to **API Mode**, upload/record audio (optionally a reference voice + claimed identity) to hit the real endpoint.
 
 The four scenarios each tell a distinct story:
@@ -110,39 +114,46 @@ src/
     layout.tsx        fonts, metadata, global ToastProvider
     page.tsx          product landing page
     demo/page.tsx     live console route
-    globals.css       VAANISHIELD theme tokens, motion, reduced-motion support
+    how-it-works/page.tsx  interactive layers + pipeline walkthrough
+    insights/page.tsx      analysis history + system insights
+    globals.css       VAANISHIELD light theme tokens, motion, reduced-motion support
   components/
-    site-navbar.tsx        landing nav (scroll-aware)
-    hero-section.tsx       headline + eyebrow + trust note + CTA
-    live-guard-widget.tsx  interactive hero shield with hoverable signals
-    feature-grid.tsx       four intelligence layers
+    site-navbar.tsx        landing nav (drawer on mobile)
+    hero-section.tsx       headline + eyebrow + Live Guard + CTAs
+    live-guard-widget.tsx  state-aware instrument panel (shield, 4 layer nodes, risk score)
+    product-tour.tsx       interactive 4-step first-run walkthrough + Live Guard preview
+    layer-stepper.tsx      interactive four-layer explanation with example outputs
     problem-section.tsx    voice-cloning problem + core quote
     pipeline-visual.tsx    clickable detection → prevention pipeline
-    comparison-section.tsx deepfake detector vs VAANISHIELD
-    languages-section.tsx  India language roadmap (honest status)
+    comparison-section.tsx capability-row table vs basic deepfake detector
+    languages-section.tsx  India language roadmap (honest status, network layout)
     final-cta.tsx          CTA into the live demo
     footer.tsx             limitation + project info
-    demo-shell.tsx         console orchestrator (mode, state, layout)
-    scenario-selector.tsx  four selectable scenario cards
-    audio-upload.tsx       drag-drop, browse, mic recording, reference voice
-    audio-visualizer.tsx   animated waveform + play/pause/restart/delete
-    analysis-pipeline.tsx  four progressing stages with status text
+    demo-shell.tsx         console orchestrator (mode, state, 3-stage stepper, layout)
+    scenario-selector.tsx  four selectable scenario cards with Load Scenario buttons
+    audio-upload.tsx       drag-drop, browse, mic recording, collapsible reference identity
+    audio-visualizer.tsx   animated waveform + play/pause/restart/delete + record
+    analysis-pipeline.tsx  horizontal tracker (desktop) / vertical timeline (mobile)
+    streaming-analysis-board.tsx  live 4-signal board, voice/identity run in parallel
+    analysis-timeline.tsx  streaming event feed (voice/identity/intent/risk tagged)
+    streaming-transcript.tsx  live transcript with risk-term highlighting
     risk-gauge.tsx         animated circular 0–100 gauge
-    risk-result.tsx        score hero + recommendation + reasons
+    risk-result.tsx        score hero + recommendation + reasons + critical OTP warning
     voice-authenticity-card.tsx / identity-card.tsx / intent-card.tsx / risk-engine-card.tsx
-    verification-panel.tsx adaptive verification workflow
+    verification-panel.tsx adaptive verification stepper with simulated confirmation
     analysis-history.tsx   localStorage recent analyses with replay
     evidence-card.tsx      shared expandable card shell + meters
     status-badge.tsx       status / tier / live indicators
+    insights-client.tsx    client insights dashboard (stats, risk distribution, history)
     toast-provider.tsx     toast notifications + context
     reveal.tsx             scroll-reveal wrapper
   hooks/
-    use-analysis.ts        pipeline timing, demo/API split, history
+    use-analysis.ts        streaming simulation, demo/API split, timeline, history, Live Guard state
   lib/
-    types.ts               shared response + UI types
+    types.ts               shared response + UI types + TimelineEvent + AnalysisState
     api-client.ts          dedicated backend client + response sanitization
-    demo-scenarios.ts      scenario configs + mocked responses (backend shape)
-    risk-utils.ts          score normalization, tier metadata, transcript highlight
+    demo-scenarios.ts      scenario configs, mocked responses, streaming event schedules
+    risk-utils.ts          score normalization, tier metadata, risk-term highlighting
 ```
 
 Recent analyses persist to `localStorage` only — no database is used in the MVP.
@@ -160,20 +171,21 @@ The backend tier always wins when provided; this mapping is only the display fal
 
 ## Design system
 
-Deep-navy command-center theme with a cyan→indigo accent gradient and per-tier status colors:
+Clean light-theme product experience with an electric blue → indigo accent and per-tier status colors:
 
-- Navy `#07111F` / Midnight `#0B1B32` / Surface `#102642` / Elevated `#142F4D`
-- Cyan `#38D6FF` · Indigo `#6C63FF` · Violet `#A78BFA`
-- Low `#34D399` · Medium `#FBBF24` · High `#FB923C` · Critical `#F43F5E`
+- Page `#F5F8FC` / Surface `#FFFFFF` / Soft blue `#EEF6FF` / Border soft slate
+- Navy text `#102A43` (deep navy `#102A43`) · Secondary `#486581` · Muted `#829AB1`
+- Primary `#1565D8` · Blue `#2F80ED` · Cyan `#00A7C7` · Indigo `#5B5FEF`
+- Low `#159A6B` · Medium `#D97706` · High `#EA6A00` · Critical `#D92D4F`
 
-Frosted-glass panels, soft borders (`rgba(148,163,184,0.18)`), layered shadows, and short purposeful animations. All motion respects `prefers-reduced-motion`.
+White `.card-surface` panels with soft borders and layered shadows, and short purposeful animations (scan ring, waveform bounce, sweep, pulse, entrance rise). All motion respects `prefers-reduced-motion`.
 
 Layout is centralized in `globals.css` tokens:
 
 - `--content-max-width: 1280px` with 16/24/32px side padding (the `.vn-container` class applies one shared edge to navbar, hero, every section, CTA, footer, and the demo console).
 - `.vn-section` gives a 40/56/80px vertical rhythm (mobile/tablet/desktop).
 - Card radius `20px`, small radius `12px`, 48px control height, 24px (desktop) / 16px (mobile) grid gap.
-- The hero **Live Guard** widget is a self-contained diagram: header row, centered shield + animated analysis ring, four equal-width signal columns, and a stable footer — no layout jumps when state changes.
+- The **Live Guard** is a self-contained instrument panel: a status badge, an incoming Voice Signal feed, a scan ring around a navy shield with the risk score inside, four interactive layer nodes (Voice / Identity / Intent / Risk), and a fixed-height signal readout that updates on hover/focus/click. Node clicks open the related evidence card; the Critical state locks onto the threat and shows a **Verify caller** action. All motion is transform/opacity driven with a stable layout height.
 
 ## Lint / build checks
 
@@ -184,4 +196,4 @@ npm run build
 
 ## Honest positioning
 
-VAANISHIELD provides **probabilistic risk assessment** — it is not a final determination of authenticity or identity, and it does not claim 100% accuracy. Scores are risk indicators, not guaranteed truth. Verification actions are simulations and never intercept real calls, SMS, or payments.
+VAANISHIELD provides **probabilistic risk assessment** — it is not a final determination of authenticity or identity, and it does not claim 100% accuracy. Scores are risk indicators, not guaranteed truth. Verification actions, interception, and messaging are simulations and never intercept real calls, SMS, or payments.

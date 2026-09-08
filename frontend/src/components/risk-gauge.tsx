@@ -29,10 +29,6 @@ function getReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/**
- * Animated circular gauge. The arc eases from 0 to the final score using a
- * short rAF tween so it feels alive in a live demo without being distracting.
- */
 export default function RiskGauge({
   score,
   tier,
@@ -52,8 +48,6 @@ export default function RiskGauge({
   const radiusRef = useRef(0);
   const [radius, setRadius] = useState(0);
 
-  // Sanctioned "adjust state during render" — jump straight to the final
-  // value when the user prefers reduced motion (no animation to skip).
   if (reducedMotion && displayed !== finalScore) {
     setDisplayed(finalScore);
   }
@@ -70,7 +64,6 @@ export default function RiskGauge({
     const tick = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(1, elapsed / durationMs);
-      // easeOutCubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayed(finalScore * eased);
       if (progress < 1) raf = requestAnimationFrame(tick);
@@ -102,7 +95,7 @@ export default function RiskGauge({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(148,163,184,0.12)"
+          stroke="rgba(16,42,67,0.10)"
           strokeWidth={strokeWidth}
         />
         <circle
