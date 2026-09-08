@@ -1,0 +1,11 @@
+
+> frontend@0.1.0 start
+> next start -p 3456
+
+▲ Next.js 16.3.4
+- Local:         http://localhost:3456
+- Network:       http://192.168.29.229:3456
+✓ Ready in 257ms
+✓ Running next.config.ts took 149ms
+
+D:\SIH\Sih-Project\frontend>

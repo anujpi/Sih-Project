@@ -1,0 +1,322 @@
+@import "tailwindcss";
+
+:root {
+  --vn-navy: #07111f;
+  --vn-midnight: #0b1b32;
+  --vn-surface: #102642;
+  --vn-elevated: #142f4d;
+  --vn-cyan: #38d6ff;
+  --vn-indigo: #6c63ff;
+  --vn-violet: #a78bfa;
+  --vn-green: #34d399;
+  --vn-amber: #fbbf24;
+  --vn-orange: #fb923c;
+  --vn-red: #f43f5e;
+  --vn-text: #f8fafc;
+  --vn-muted: #94a3b8;
+  --vn-border: rgba(148, 163, 184, 0.18);
+
+  /* Layout tokens */
+  --content-max-width: 1280px;
+  --content-padding-desktop: 32px;
+  --content-padding-tablet: 24px;
+  --content-padding-mobile: 16px;
+
+  /* Visual tokens */
+  --radius-card: 20px;
+  --radius-small: 12px;
+  --control-height: 48px;
+
+  /* Spacing scale (multiples of 8px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 80px;
+  --space-10: 96px;
+
+  /* Section vertical padding: 80/56/40 */
+  --section-pad-desktop: 80px;
+  --section-pad-tablet: 56px;
+  --section-pad-mobile: 40px;
+
+  /* Grid gap: 24 desktop / 16 mobile */
+  --grid-gap: 16px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --grid-gap: 24px;
+  }
+}
+
+@theme inline {
+  --color-background: var(--vn-navy);
+  --color-foreground: var(--vn-text);
+  --color-muted: var(--vn-muted);
+  --color-vn-navy: var(--vn-navy);
+  --color-vn-midnight: var(--vn-midnight);
+  --color-vn-surface: var(--vn-surface);
+  --color-vn-elevated: var(--vn-elevated);
+  --color-vn-cyan: var(--vn-cyan);
+  --color-vn-indigo: var(--vn-indigo);
+  --color-vn-violet: var(--vn-violet);
+  --color-vn-green: var(--vn-green);
+  --color-vn-amber: var(--vn-amber);
+  --color-vn-orange: var(--vn-orange);
+  --color-vn-red: var(--vn-red);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--vn-navy);
+  color: var(--vn-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: rgba(56, 214, 255, 0.28);
+  color: #fff;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--vn-cyan);
+  outline-offset: 2px;
+}
+
+/* Frosted-glass panel */
+.glass-panel {
+  background: linear-gradient(
+    160deg,
+    rgba(20, 47, 77, 0.55),
+    rgba(16, 38, 66, 0.4)
+  );
+  border: 1px solid var(--vn-border);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 20px 50px -20px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(248, 250, 252, 0.06);
+}
+
+/*
+ * Shared horizontal container for the whole site. One left/right edge for
+ * navbar, hero, sections, CTA, footer, and the demo console.
+ */
+.vn-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--content-padding-mobile);
+}
+
+@media (min-width: 640px) {
+  .vn-container {
+    padding-inline: var(--content-padding-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .vn-container {
+    padding-inline: var(--content-padding-desktop);
+  }
+}
+
+/* Consistent section vertical rhythm: 40 / 56 / 80 */
+.vn-section {
+  padding-block: var(--section-pad-mobile);
+}
+
+@media (min-width: 768px) {
+  .vn-section {
+    padding-block: var(--section-pad-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .vn-section {
+    padding-block: var(--section-pad-desktop);
+  }
+}
+
+/* Utility for the mesh-grid backdrop */
+.vn-grid-bg {
+  background-image:
+    linear-gradient(rgba(56, 214, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 214, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Animated shimmer sweep used on skeleton / progress bars */
+@keyframes vn-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.vn-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(56, 214, 255, 0.12),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: vn-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes vn-pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes vn-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes vn-grow-in {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes vn-rise-in {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vn-wave-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes vn-dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes vn-wave-slide {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.vn-wave-slide {
+  stroke-dasharray: 8 16;
+  animation: vn-wave-slide 2.4s linear infinite;
+}
+
+.vn-anim-rise {
+  animation: vn-rise-in 0.5s ease-out both;
+}
+
+.vn-anim-grow {
+  animation: vn-grow-in 0.35s ease-out both;
+}
+
+.vn-anim-float {
+  animation: vn-float 5s ease-in-out infinite;
+}
+
+.vn-wave-bar {
+  transform-origin: center;
+  animation: vn-wave-bounce 0.9s ease-in-out infinite;
+}
+
+.vn-dash-flow {
+  stroke-dasharray: 12 12;
+  animation: vn-dash-flow 1.2s linear infinite;
+}
+
+.vn-pulse-soft {
+  animation: vn-pulse-soft 2.4s ease-in-out infinite;
+}
+
+/* Waveform canvas fallback bars */
+.waveform-bars span {
+  background: linear-gradient(180deg, var(--vn-cyan), var(--vn-indigo));
+}
+
+/* Highlighted risky terms inside transcripts */
+.vn-transcript-mark {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fda4af;
+  border-radius: 3px;
+  padding: 0 2px;
+  outline: 1px solid rgba(244, 63, 94, 0.35);
+  font-weight: 600;
+}
+
+/* Reveal-on-scroll helpers */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

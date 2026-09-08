@@ -1,4 +1,4 @@
-# 🛡️ VAANISHIELD
+﻿# 🛡️ VAANISHIELD
 
 ### AI-Powered Real-Time Detection and Prevention of Voice Cloning Impersonation Attacks
 **Smart India Hackathon 2026 — Problem Statement SIH26104**
@@ -67,7 +67,7 @@ VAANISHIELD doesn't flag every suspicious call as fake outright. It scales its r
 - **Backend:** FastAPI (Python)
 - **AI/ML:** PyTorch, HuggingFace Transformers (wav2vec2), speechbrain (ECAPA-TDNN)
 - **Speech-to-Text:** faster-whisper
-- **Frontend:** *(planned)* Next.js / React
+- **Frontend:** Next.js 16 + TypeScript (Tailwind v4) - product site + live console
 - **Database:** *(planned)* PostgreSQL
 - **Deployment:** *(planned)* Docker
 
@@ -82,6 +82,16 @@ uvicorn app.main:app --reload
 ```
 
 API docs live at `http://localhost:8000/docs` once running.
+
+### Frontend
+
+`ash
+cd frontend
+npm install
+npm run dev          # http://localhost:3000
+`
+
+The app has two routes: `/` (product landing page) and `/demo` (interactive Live Voice Security Console). Demo mode runs fully offline with mocked scenarios; switch to API mode and upload real audio to hit `POST /analyze/full`. See `frontend/README.md` for details.
 
 See [`backend/models/README.md`](backend/models/README.md) for where the fine-tuned Layer 1 checkpoint needs to go — everything else downloads automatically on first run.
 
@@ -99,7 +109,7 @@ See [`backend/models/README.md`](backend/models/README.md) for where the fine-tu
 - [x] Backend scaffold — all 4 layers wired end-to-end
 - [x] Layer 2 (speaker verification) and Layer 3 (intent) — working with pretrained models
 - [ ] Layer 1 — fine-tuning on ASVspoof / In-the-Wild dataset (currently running on an untrained fallback for pipeline testing)
-- [ ] Frontend dashboard
+- [x] Frontend - product landing page + interactive live console (demo mode + API mode)
 - [ ] Multilingual intent detection (Hindi, Kannada)
 
 **Honest note:** this is a prototype under active development for an internal SIH selection round, not a production security product. See [Technical Positioning](#technical-positioning) below.
