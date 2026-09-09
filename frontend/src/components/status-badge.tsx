@@ -31,32 +31,32 @@ const VARIANT_CLASSES: Record<
   { wrap: string; dot: string; label: string }
 > = {
   ok: {
-    wrap: "border-vn-green/30 bg-vn-green/10",
+    wrap: "border-vn-green/30 bg-vn-green/8",
     dot: "bg-vn-green",
     label: "text-vn-green",
   },
   processing: {
-    wrap: "border-vn-cyan/30 bg-vn-cyan/10",
-    dot: "bg-vn-cyan",
-    label: "text-vn-cyan",
+    wrap: "border-vn-primary/30 bg-vn-primary/8",
+    dot: "bg-vn-primary",
+    label: "text-vn-primary",
   },
   demo: {
-    wrap: "border-vn-violet/30 bg-vn-violet/10",
-    dot: "bg-vn-violet",
-    label: "text-vn-violet",
-  },
-  api: {
-    wrap: "border-vn-indigo/30 bg-vn-indigo/10",
+    wrap: "border-vn-indigo/30 bg-vn-indigo/8",
     dot: "bg-vn-indigo",
     label: "text-vn-indigo",
   },
+  api: {
+    wrap: "border-vn-blue/30 bg-vn-blue/8",
+    dot: "bg-vn-blue",
+    label: "text-vn-blue",
+  },
   skipped: {
-    wrap: "border-vn-muted/30 bg-white/5",
+    wrap: "border-vn-muted/30 bg-vn-muted/8",
     dot: "bg-vn-muted",
     label: "text-vn-muted",
   },
   error: {
-    wrap: "border-vn-red/30 bg-vn-red/10",
+    wrap: "border-vn-red/30 bg-vn-red/8",
     dot: "bg-vn-red",
     label: "text-vn-red",
   },
@@ -114,10 +114,10 @@ export function LiveStatusTicker({
   const Icon = PULSE_ICONS[icon];
   const palette =
     variant === "live"
-      ? { wrap: "border-vn-green/30 bg-vn-green/10", text: "text-vn-green" }
+      ? { wrap: "border-vn-green/30 bg-vn-green/8", text: "text-vn-green" }
       : variant === "paused"
-        ? { wrap: "border-vn-amber/30 bg-vn-amber/10", text: "text-vn-amber" }
-        : { wrap: "border-vn-violet/30 bg-vn-violet/10", text: "text-vn-violet" };
+        ? { wrap: "border-vn-amber/30 bg-vn-amber/8", text: "text-vn-amber" }
+        : { wrap: "border-vn-indigo/30 bg-vn-indigo/8", text: "text-vn-indigo" };
 
   return (
     <div
@@ -132,7 +132,7 @@ export function LiveStatusTicker({
         />
         {variant === "live" && (
           <span
-            className={`absolute inset-0 h-2 w-2 animate-ping rounded-full opacity-40`}
+            className="absolute inset-0 h-2 w-2 animate-ping rounded-full opacity-40"
             style={{ background: "currentColor" }}
             aria-hidden="true"
           />

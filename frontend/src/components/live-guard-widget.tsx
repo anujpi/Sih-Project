@@ -1,216 +1,536 @@
 "use client";
 
 import {
+  AlertTriangle,
   AudioLines,
+  AudioWaveform,
+  CheckCircle2,
   Fingerprint,
-  MessageSquareText,
-  Scale,
-  ShieldCheck,
+  Gauge,
+  ScanSearch,
+  ShieldAlert,
+  XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { RiskTier } from "@/lib/types";
 
-const SIGNALS = [
+export type LiveGuardState = "idle" | "scanning" | RiskTier | "error";
+export type LiveGuardSignalId = "voice" | "identity" | "intent" | "risk";
+
+export interface LiveGuardSignals {
+  voice?: string;
+  identity?: string;
+  intent?: string;
+  risk?: string;
+}
+
+interface LiveGuardWidgetProps {
+  state?: LiveGuardState;
+  score?: number;
+  signals?: LiveGuardSignals;
+  scanPhase?: LiveGuardSignalId;
+  preview?: {
+    tier: RiskTier;
+    label?: string;
+    highlight?: "identity" | null;
+  } | null;
+  onSelectSignal?: (id: LiveGuardSignalId) => void;
+  onVerifyClick?: () => void;
+}
+
+const STATE_COLORS: Record<LiveGuardState, string> = {
+  idle: "#1565D8",
+  scanning: "#00A7C7",
+  low: "#159A6B",
+  medium: "#D97706",
+  high: "#EA6A00",
+  critical: "#D92D4F",
+  error: "#D92D4F",
+};
+
+const BADGE_LABELS: Record<LiveGuardState, string> = {
+  idle: "SYSTEM READY",
+  scanning: "ANALYZING SIGNALS",
+  low: "LOW RISK",
+  medium: "CAUTION REQUIRED",
+  high: "VERIFY CALLER",
+  critical: "CRITICAL RISK",
+  error: "ANALYSIS ERROR",
+};
+
+const PHASE_TEXT: Record<LiveGuardSignalId, string> = {
+  voice: "Analyzing voice authenticity...",
+  identity: "Checking identity consistency...",
+  intent: "Scanning conversation intent...",
+  risk: "Building risk verdict...",
+};
+
+const STATUS_TEXT: Record<LiveGuardState, string> = {
+  idle: "System ready to analyze.",
+  scanning: "Analyzing voice signals...",
+  low: "Low risk — normal conversation.",
+  medium: "Caution — verify before sharing sensitive information.",
+  high: "Independent verification recommended.",
+  critical: "Critical impersonation risk.",
+  error: "Analysis failed — unable to screen the call.",
+};
+
+const SIGNAL_NODES: {
+  id: Exclude<LiveGuardSignalId, "risk">;
+  label: string;
+  sub: string;
+  accent: string;
+  icon: typeof AudioLines;
+  explanation: string;
+}[] = [
   {
     id: "voice",
     label: "Voice",
+    sub: "Authenticity",
+    accent: "#00A7C7",
     icon: AudioLines,
-    copy: "Scores acoustic features for AI-generation fingerprints using a fine-tuned wav2vec2 model — how likely is this audio machine-generated?",
+    explanation: "Synthetic-voice probability from the acoustic model.",
   },
   {
     id: "identity",
     label: "Identity",
+    sub: "Verification",
+    accent: "#5B5FEF",
     icon: Fingerprint,
-    copy: "Compares the caller against a trusted reference voiceprint (ECAPA-TDNN) — is this really who they claim to be?",
+    explanation: "Speaker similarity compared against the claimed reference voice.",
   },
   {
     id: "intent",
     label: "Intent",
-    icon: MessageSquareText,
-    copy: "Transcribes the conversation and flags social-engineering pressure: OTP spills, urgent transfers, secrecy demands, and authority claims.",
+    sub: "Analysis",
+    accent: "#2F80ED",
+    icon: ScanSearch,
+    explanation: "Detected scam-pressure signals in the conversation.",
   },
-  {
-    id: "context",
-    label: "Context",
-    icon: Scale,
-    copy: "Fuses every signal into one explainable 0–100 impersonation risk score — then decides what the right action is.",
-  },
-] as const;
+];
 
-type SignalId = (typeof SIGNALS)[number]["id"];
+const PHASE_ORDER: LiveGuardSignalId[] = ["voice", "identity", "intent", "risk"];
+const PREVIEW_TIPS: Record<LiveGuardSignalId, string> = {
+  voice: "Click to open the voice authenticity evidence card.",
+  identity: "Click to open the identity verification evidence card.",
+  intent: "Click to open the intent analysis evidence card.",
+  risk: "Click to open the unified risk engine card.",
+};
 
-export default function LiveGuardWidget() {
-  const [active, setActive] = useState<SignalId | null>(null);
-  const activeSignal = SIGNALS.find((s) => s.id === active) ?? null;
+const RING_C = 339.3;
+
+export default function LiveGuardWidget({
+  state = "idle",
+  score,
+  signals = {},
+  scanPhase,
+  preview = null,
+  onSelectSignal,
+  onVerifyClick,
+}: LiveGuardWidgetProps) {
+  const previewing = state === "idle" && !!preview;
+  const isScanning = state === "scanning";
+  const effectiveTier: RiskTier = previewing
+    ? (preview?.tier ?? "low")
+    : state === "high" || state === "medium" || state === "low" || state === "critical"
+      ? state
+      : "low";
+  const color = previewing
+    ? STATE_COLORS[preview?.tier ?? "low"]
+    : STATE_COLORS[state];
+
+  const hasScore = score !== undefined && score >= 0 && !isScanning && state !== "idle" && !previewing;
+
+  const [hovered, setHovered] = useState<LiveGuardSignalId | null>(null);
+  const [selected, setSelected] = useState<LiveGuardSignalId | null>(null);
+  const [cycleIndex, setCycleIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isScanning || scanPhase) return;
+    const timer = setInterval(() => setCycleIndex((i) => (i + 1) % PHASE_ORDER.length), 1450);
+    return () => clearInterval(timer);
+  }, [isScanning, scanPhase]);
+
+  const phaseId: LiveGuardSignalId = scanPhase ?? PHASE_ORDER[cycleIndex];
+
+  function nodeActive(id: Exclude<LiveGuardSignalId, "risk">): boolean {
+    if (isScanning) return phaseId === id;
+    return false;
+  }
+
+  function nodeHighlighted(id: Exclude<LiveGuardSignalId, "risk">): boolean {
+    if (isScanning) return false;
+    if (preview?.highlight === id) return true;
+    const strong = effectiveTier === "high" || effectiveTier === "critical" || state === "error";
+    return strong && id === "identity";
+  }
+
+  const lockHeld = state === "critical" || state === "error";
+
+  const badgeLabel = previewing
+    ? "SCENARIO PREVIEW"
+    : BADGE_LABELS[state];
+
+  const message = previewing
+    ? `${preview?.label ?? "Scenario"} preview — ${STATUS_TEXT[preview?.tier ?? "low"].split(".")[0].toLowerCase()}.`
+    : isScanning
+      ? PHASE_TEXT[phaseId]
+      : STATUS_TEXT[state];
+
+  const focused = hovered ?? selected;
+  const readout = focused
+    ? {
+        title: focused,
+        metric: signals[focused] ?? null,
+        line: focused === "risk"
+          ? `${hasScore ? `Score ${score}/100. ` : ""}${STATUS_TEXT[state].split(".")[0]}.`
+          : SIGNAL_NODES.find((n) => n.id === focused)?.explanation ?? "",
+        hint: "Click to open the related evidence card.",
+      }
+    : isScanning
+      ? {
+          title: phaseId,
+          metric: signals[phaseId] ?? null,
+          line: PHASE_TEXT[phaseId],
+          hint: "Signal flowing through the intelligence layers.",
+        }
+      : hasScore
+        ? {
+            title: "risk",
+            metric: `Score ${score}/100`,
+            line: STATUS_TEXT[state].split(".")[0],
+            hint: "Click a layer node for its live reading.",
+          }
+        : previewing
+          ? {
+              title: "voice",
+              metric: "Scenario preview",
+              line: `Showing the expected ${preview?.tier ?? "low"} pattern before analysis runs.`,
+              hint: "Run the analysis to see the full pipeline.",
+            }
+          : {
+              title: null,
+              metric: null,
+              line: "Awaiting input — select a scenario or feed a voice signal into the core.",
+              hint: "Hover a signal node for live readings.",
+            };
 
   return (
-    <div className="relative mx-auto w-full max-w-lg">
-      {/* Decorative glow anchored to the diagram container */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 rounded-[calc(var(--radius-card)+8px)] opacity-60 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(55% 55% at 50% 45%, rgba(56,214,255,0.16), transparent 70%)",
-        }}
-        aria-hidden="true"
-      />
-
-      <div className="glass-panel relative overflow-hidden p-5 sm:p-6">
-        {/* Header row */}
-        <div className="flex items-center justify-between gap-3 border-b border-vn-border pb-4">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-vn-muted">
-            Live guard
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-vn-green/30 bg-vn-green/10 px-2.5 py-1 font-mono text-[10px] font-bold tracking-widest text-vn-green">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-vn-green vn-pulse-soft" aria-hidden="true" />
-            Protection active
-          </span>
-        </div>
-
-        {/* Core visual — stable region, centered stack */}
-        <div className="relative mt-4 flex min-h-[248px] flex-col items-center justify-center sm:min-h-[264px]">
-          <svg
-            className="pointer-events-none absolute inset-0 h-full w-full"
-            viewBox="0 0 420 260"
-            preserveAspectRatio="xMidYMid meet"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient id="vn-wave-in" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#38d6ff" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#38d6ff" stopOpacity="0.05" />
-              </linearGradient>
-              <linearGradient id="vn-shield-g" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#38d6ff" />
-                <stop offset="100%" stopColor="#6c63ff" />
-              </linearGradient>
-            </defs>
-
-            {/* Incoming waveform (behind the shield, anchored to container) */}
-            <path d="M6 130 q14 -34 26 0 t26 0 t26 0 t26 0 t26 0 t26 0" stroke="url(#vn-wave-in)" strokeWidth="2" fill="none" className="vn-wave-slide" opacity="0.5" />
-            <text x="10" y="104" fill="#94a3b8" fontSize="11" fontFamily="monospace">
-              audio in
-            </text>
-
-            {/* Outgoing direction */}
-            <path d="M330 130 q14 -30 26 0 t26 0 t26 0" stroke="url(#vn-wave-in)" strokeWidth="2" fill="none" opacity="0.35" />
-            <text x="344" y="104" fill="#94a3b8" fontSize="11" fontFamily="monospace">
-              verdict out
-            </text>
-          </svg>
-
-          {/* Shield core */}
-          <svg
-            viewBox="0 0 240 240"
-            className="relative h-[200px] w-[200px] sm:h-[216px] sm:w-[216px]"
-            role="img"
-            aria-label="VAANISHIELD shield core with an animated analysis ring"
-          >
-            <defs>
-              <linearGradient id="vn-ring" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#38d6ff" />
-                <stop offset="100%" stopColor="#6c63ff" />
-              </linearGradient>
-            </defs>
-
-            {/* Ring track */}
-            <circle cx="120" cy="120" r="100" fill="#0b1b32" stroke="rgba(148,163,184,0.16)" strokeWidth="6" />
-            {/* Animated analysis ring (dashes travel the track) */}
-            <circle
-              cx="120"
-              cy="120"
-              r="100"
-              fill="none"
-              stroke="url(#vn-ring)"
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeDasharray="14 14"
-              className="vn-dash-flow"
-              transform="rotate(-90 120 120)"
-            />
-
-            {/* Shield */}
-            <path
-              d="M120 56 L172 80 L172 128 Q172 164 120 186 Q68 164 68 128 L68 80 Z"
-              fill="rgba(11,27,50,0.9)"
-              stroke="url(#vn-shield-g)"
-              strokeWidth="3"
-              strokeLinejoin="round"
-              className="vn-pulse-soft"
-            />
-            <path
-              d="M120 56 L172 80 L172 128 Q172 164 120 186 Q68 164 68 128 L68 80 Z"
-              fill="url(#vn-shield-g)"
-              opacity="0.1"
-            />
-            <path d="M106 118 L116 128 L138 102" stroke="#38d6ff" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-
-            {/* Status inside the ring, under the shield */}
-            <text x="120" y="214" fill="#38d6ff" fontSize="12" fontFamily="monospace" textAnchor="middle" letterSpacing="2" className="vn-pulse-soft">
-              ANALYZING
-            </text>
-          </svg>
-        </div>
-
-        {/* Four monitored signals — equal-width columns, shared baseline */}
-        <div
-          role="toolbar"
-          aria-label="Four VAANISHIELD intelligence signals"
-          className="mt-5 grid grid-cols-4 gap-2 sm:gap-2.5"
+    <div className="mx-auto w-full max-w-[400px] select-none overflow-hidden">
+      {/* Status badge */}
+      <div className="flex justify-center">
+        <span
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em]"
+          style={{ borderColor: `${color}44`, background: `${color}0A`, color }}
         >
-          {SIGNALS.map((signal) => {
-            const Icon = signal.icon;
-            const isActive = active === signal.id;
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${isScanning || state === "error" ? "vn-pulse-soft" : ""}`}
+            style={{ background: color }}
+            aria-hidden="true"
+          />
+          {badgeLabel}
+        </span>
+      </div>
+
+      {/* VOICE SIGNAL label + connector */}
+      <div className="mt-4 flex flex-col items-center">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.3em] text-vn-muted">
+          <AudioWaveform className="h-3.5 w-3.5" style={{ color }} aria-hidden="true" />
+          Voice signal
+        </div>
+        <div aria-hidden="true" className="relative mt-1 h-6 w-px overflow-hidden" style={{ background: `linear-gradient(${color}44, ${color})` }}>
+          {isScanning && <span className="vn-drop absolute inline-block h-1.5 w-1.5 rounded-full" style={{ background: color }} />}
+        </div>
+      </div>
+
+      {/* Core: scan ring + shield + risk score */}
+      <div
+        className="relative mx-auto mt-2 w-[min(66vw,248px)]"
+        style={{ "--ring-c": `${RING_C}` } as CSSProperties}
+      >
+        <div className="relative aspect-square w-full">
+          {/* Background circle */}
+          <div aria-hidden="true" className="absolute inset-0 rounded-full bg-white border border-vn-border shadow-sm" />
+
+          {/* Radar sweep while scanning */}
+          {isScanning && (
+            <div
+              aria-hidden="true"
+              className="vn-sweep-slow absolute -inset-[6%] rounded-full"
+              style={{ background: `conic-gradient(from 0deg, ${color}22, transparent 80deg, transparent 320deg, ${color}0A 360deg)` }}
+            />
+          )}
+
+          {/* Static base ring + rotating dashed scan ring */}
+          <div aria-hidden="true" className="absolute inset-0 rounded-full" style={{ border: `1px solid ${color}18` }} />
+          <div
+            aria-hidden="true"
+            className={`absolute inset-0 rounded-full ${isScanning && !lockHeld ? "vn-spin-slow" : ""}`}
+            style={{ border: `1.5px dashed ${lockHeld ? color : `${color}44`}` }}
+          />
+
+          {/* Progress ring */}
+          <svg
+            className="absolute inset-0 h-full w-full -rotate-90"
+            viewBox="0 0 120 120"
+            aria-hidden="true"
+            fill="none"
+          >
+            <circle cx="60" cy="60" r="54" stroke="#D9E2EC" strokeWidth="3" />
+            <circle
+              cx="60"
+              cy="60"
+              r="54"
+              stroke={color}
+              strokeWidth="3"
+              strokeLinecap="round"
+              className={isScanning ? "vn-progress-scan" : ""}
+              style={{
+                strokeDasharray: RING_C,
+                strokeDashoffset:
+                  !isScanning && hasScore ? RING_C * (1 - (score ?? 0) / 100) : undefined,
+                transition: "stroke-dashoffset 1.2s ease",
+              }}
+            />
+          </svg>
+
+          {/* Waveform entering from the left */}
+          <div
+            aria-hidden="true"
+            className="absolute left-1 top-1/2 flex -translate-y-1/2 items-end gap-[3px]"
+          >
+            {[4, 7, 6, 9, 6, 8].map((h, i) => (
+              <span
+                key={i}
+                className={`block w-[3px] rounded-full ${isScanning ? "vn-wave-bar-active" : "vn-wave-bar"}`}
+                style={{
+                  height: `${h * 3}px`,
+                  animationDelay: `${i * 0.13}s`,
+                  background: `${color}aa`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Shield (breathing glow) */}
+          <div aria-hidden="true" className="vn-breathe pointer-events-none absolute inset-0 grid place-items-center">
+            <svg
+              className="h-[56%] w-[56%]"
+              viewBox="0 0 24 24"
+              style={{ filter: `drop-shadow(0 0 12px ${color}33)` }}
+            >
+              <path
+                d="M12 2l8 3v6c0 5-3.3 8.6-8 11-4.7-2.4-8-6-8-11V5l8-3z"
+                fill={`${color}18`}
+                stroke={color}
+                strokeWidth="1.3"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* Risk score inside the shield */}
+          <div className="pointer-events-none absolute inset-0 grid place-items-center">
+            <div className="text-center">
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em]" style={{ color }}>
+                {isScanning ? "Scanning" : "Risk"}
+              </p>
+              <p className="mt-0.5 font-mono text-[2.1rem] font-bold leading-none tabular-nums sm:text-[2.4rem]" style={{ color }}>
+                {hasScore ? score : isScanning ? "..." : "--"}
+              </p>
+              <p className="mt-1.5 flex items-center justify-center gap-1" style={{ color }}>
+                {state === "low" ? (
+                  <CheckCircle2 className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                ) : state === "critical" ? (
+                  <ShieldAlert className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                ) : state === "medium" || state === "high" ? (
+                  <AlertTriangle className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                ) : state === "error" ? (
+                  <XCircle className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <span className={`h-1.5 w-1.5 rounded-full ${isScanning ? "vn-pulse-soft" : ""}`} style={{ background: color }} aria-hidden="true" />
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Branch connectors into the three layer nodes */}
+      <div className="mx-auto mt-1 w-full max-w-[300px]">
+        <div className="grid grid-cols-3 justify-items-center gap-2">
+          {SIGNAL_NODES.map((node) => {
+            const active = nodeActive(node.id);
+            const highlight = nodeHighlighted(node.id);
+            const lit = active || highlight;
             return (
-              <button
-                key={signal.id}
-                type="button"
-                aria-pressed={isActive}
-                aria-expanded={isActive}
-                onMouseEnter={() => setActive(signal.id)}
-                onMouseLeave={() => setActive((cur) => (cur === signal.id ? null : cur))}
-                onFocus={() => setActive(signal.id)}
-                onBlur={() => setActive((cur) => (cur === signal.id ? null : cur))}
-                onClick={() => setActive(isActive ? null : signal.id)}
-                className={`flex min-h-[68px] flex-col items-center justify-center gap-1.5 rounded-[var(--radius-small)] border px-1 py-2.5 text-center transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan ${
-                  isActive
-                    ? "border-vn-cyan/60 bg-vn-cyan/10 text-vn-cyan shadow-lg shadow-vn-cyan/10"
-                    : "border-vn-border bg-vn-surface/40 text-vn-muted hover:border-vn-cyan/30 hover:text-vn-text"
-                }`}
+              <span
+                key={node.id}
+                aria-hidden="true"
+                className="relative h-5 w-px overflow-hidden rounded-full"
+                style={{ background: lit ? node.accent : "#D9E2EC" }}
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/5">
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <span className="text-[11px] font-semibold leading-none">{signal.label}</span>
-              </button>
+                {highlight && !active && (
+                  <span className="vn-pulse-soft absolute inset-0" style={{ background: node.accent }} />
+                )}
+                {active && (
+                  <span
+                    className="vn-drop absolute left-0 top-0 h-1.5 w-full rounded-full"
+                    style={{ background: node.accent }}
+                  />
+                )}
+              </span>
             );
           })}
         </div>
 
-        {/* Explanation */}
-        <p
-          role="status"
-          className="mt-3 flex min-h-[52px] items-start gap-1.5 rounded-[var(--radius-small)] border border-vn-border bg-vn-navy/50 px-3.5 py-2.5 text-xs leading-relaxed text-vn-muted"
-        >
-          {activeSignal ? (
-            <>
-              <strong className="shrink-0 text-vn-cyan">{activeSignal.label}:</strong>{" "}
-              {activeSignal.copy}
-            </>
-          ) : (
-            <>Hover or tap a signal to see what VAANISHIELD checks on every layer.</>
-          )}
-        </p>
-
-        {/* Footer row */}
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-vn-border pt-4">
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-vn-muted">
-            4 signals monitored
-          </span>
-          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold tracking-widest text-vn-cyan">
-            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Risk: analyzing
-          </span>
+        {/* Voice / Identity / Intent nodes */}
+        <div className="mt-1 grid grid-cols-3 gap-2">
+          {SIGNAL_NODES.map((node) => {
+            const NodeIcon = node.icon;
+            const isHovered = hovered === node.id;
+            const isCurrent = selected === node.id;
+            const active = nodeActive(node.id);
+            const highlight = nodeHighlighted(node.id);
+            const lit = active || highlight || isHovered || isCurrent;
+            const usedColor = lit ? node.accent : color;
+            return (
+              <button
+                key={node.id}
+                type="button"
+                aria-pressed={isCurrent}
+                aria-label={`${node.label} signal — ${signals[node.id] ?? "no reading yet"}. ${PREVIEW_TIPS[node.id]}`}
+                onMouseEnter={() => setHovered(node.id)}
+                onMouseLeave={() => setHovered((h) => (h === node.id ? null : h))}
+                onFocus={() => setHovered(node.id)}
+                onBlur={() => setHovered((h) => (h === node.id ? null : h))}
+                onClick={() => {
+                  setSelected(node.id);
+                  onSelectSignal?.(node.id);
+                }}
+                className="group relative flex w-full flex-col items-center gap-1 rounded-xl border px-1.5 py-2.5 text-center transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-primary"
+                style={{
+                  borderColor: lit ? `${usedColor}66` : "#D9E2EC",
+                  background: lit ? `${usedColor}08` : "#FFFFFF",
+                }}
+              >
+                {(active || highlight) && (
+                  <span
+                    aria-hidden="true"
+                    className="vn-node-glow pointer-events-none absolute h-9 w-9 rounded-full"
+                    style={{ background: `radial-gradient(circle, ${usedColor}22, transparent 70%)` }}
+                  />
+                )}
+                <span className="relative">
+                  <NodeIcon className="h-4 w-4" style={{ color: usedColor }} aria-hidden="true" />
+                </span>
+                <span className="relative text-[11px] font-bold leading-none text-vn-navy">{node.label}</span>
+                <span className="relative font-mono text-[9px] leading-none text-vn-muted">{node.sub}</span>
+                <span className="relative font-mono text-[10px] font-semibold leading-none" style={{ color: lit ? usedColor : "var(--vn-muted)" }}>
+                  {signals[node.id] ?? "--"}
+                </span>
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Connector to the risk engine */}
+      <div aria-hidden="true" className="mx-auto mt-2 h-5 w-px overflow-hidden" style={{ background: `linear-gradient(${color}44, ${color})` }}>
+        {isScanning && <span className="vn-drop inline-block h-1.5 w-1.5 rounded-full" style={{ background: color }} />}
+      </div>
+
+      {/* Risk engine node */}
+      <button
+        type="button"
+        aria-pressed={selected === "risk"}
+        aria-label={`Risk engine — ${signals.risk ?? "no verdict yet"}. ${PREVIEW_TIPS.risk}`}
+        onMouseEnter={() => setHovered("risk")}
+        onMouseLeave={() => setHovered((h) => (h === "risk" ? null : h))}
+        onFocus={() => setHovered("risk")}
+        onBlur={() => setHovered((h) => (h === "risk" ? null : h))}
+        onClick={() => {
+          setSelected("risk");
+          onSelectSignal?.("risk");
+        }}
+        className="mx-auto mt-0.5 flex w-full max-w-[300px] items-center gap-3 rounded-xl border p-3 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-primary"
+        style={{
+          borderColor: hovered === "risk" || selected === "risk" ? `${color}66` : "#D9E2EC",
+          background: hovered === "risk" || selected === "risk" ? `${color}08` : "#FFFFFF",
+        }}
+      >
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+          style={{ background: `${color}10`, color }}
+        >
+          <Gauge className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-bold text-vn-navy">Risk Engine</span>
+          <span className="mt-0.5 block font-mono text-[10px] text-vn-muted">
+            {signals.risk ?? "Combined verdict"}
+          </span>
+        </span>
+        <span className="shrink-0 font-mono text-sm font-bold tabular-nums" style={{ color }}>
+          {hasScore ? `${score}/100` : isScanning ? "..." : "--"}
+        </span>
+      </button>
+
+      {/* Live signal readout */}
+      <div
+        className="mt-3 flex min-h-[64px] items-start gap-3 rounded-xl border border-vn-border bg-vn-surface-blue px-3.5 py-3"
+        aria-live="polite"
+      >
+        <span
+          className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
+          style={{ background: `${color}10`, color }}
+          aria-hidden="true"
+        >
+          {readout.title === "voice" ? (
+            <AudioLines className="h-3.5 w-3.5" />
+          ) : readout.title === "identity" ? (
+            <Fingerprint className="h-3.5 w-3.5" />
+          ) : readout.title === "intent" ? (
+            <ScanSearch className="h-3.5 w-3.5" />
+          ) : readout.title === "risk" ? (
+            <Gauge className="h-3.5 w-3.5" />
+          ) : (
+            <AudioWaveform className="h-3.5 w-3.5" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          {readout.title && (
+            <span className="block text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color }}>
+              {readout.title === "risk" ? "Risk engine" : readout.title}
+              {readout.metric ? ` : ${readout.metric}` : ""}
+            </span>
+          )}
+          <span className="mt-0.5 block text-xs leading-snug text-vn-secondary">{readout.line}</span>
+          {!isScanning && (
+            <span className="mt-0.5 block text-[10px] text-vn-muted">{readout.hint}</span>
+          )}
+        </span>
+      </div>
+
+      {/* Status message + critical action */}
+      <div className="mt-4 flex min-h-[40px] flex-wrap items-center justify-center gap-3 text-center">
+        <p
+          aria-live={isScanning ? "off" : "polite"}
+          className="text-sm font-semibold"
+          style={{ color: previewing ? color : "var(--vn-navy)" }}
+        >
+          {message}
+        </p>
+        {effectiveTier === "critical" && (
+          <button
+            type="button"
+            onClick={onVerifyClick}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-vn-red/30 bg-vn-red/8 px-4 py-2 text-xs font-bold text-vn-red transition-colors hover:bg-vn-red/15"
+          >
+            <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+            Verify caller
+          </button>
+        )}
       </div>
     </div>
   );

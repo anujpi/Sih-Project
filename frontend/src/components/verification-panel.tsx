@@ -4,12 +4,13 @@ import {
   Check,
   CheckCircle2,
   CircleDashed,
+  Loader2,
   Lock,
   MessageSquareText,
   PhoneCall,
   ShieldCheck,
-  X,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/toast-provider";
 import { TIER_META } from "@/lib/risk-utils";
 import {
@@ -24,45 +25,38 @@ interface VerificationPanelProps {
   onStatusChange: (status: VerificationStatus) => void;
 }
 
-const VERIFICATION_STEPS: VerificationStep[] = [
+const VERIFICATION_STEPS: (VerificationStep & { tag: string })[] = [
   {
     id: "phrase",
-    label: "Independent verification phrase",
+    label: "Verification phrase",
+    tag: "Secret question",
     description:
       "Call the person back on a number you already trust, or ask the caller a question only the real person would know.",
   },
   {
     id: "contact",
-    label: "Trusted contact confirmation",
+    label: "Trusted contact",
+    tag: "Out-of-band",
     description:
       "Confirm with a family member or the organization directly instead of acting on this call.",
   },
   {
     id: "secondary",
-    label: "Secondary-channel check",
+    label: "Secondary channel",
+    tag: "Official app",
     description:
       "Verify through a different channel — an official app, a known website, or an in-person visit.",
   },
   {
     id: "device",
-    label: "Registered-device consistency",
+    label: "Registered device",
+    tag: "Device check",
     description:
       "Confirm the caller is acting from the registered device and number on file before sharing anything.",
   },
 ];
 
-function stepState(
-  step: VerificationStep,
-  status: VerificationStatus
-): "pending" | "active" | "done" | "blocked" {
-  if (status === "verified") return "done";
-  if (status === "blocked") return "blocked";
-  const idx = VERIFICATION_STEPS.findIndex((s) => s.id === step.id);
-  if (status === "pending" || status === "none") {
-    return idx === 0 ? "active" : "pending";
-  }
-  return "pending";
-}
+type SimPhase = "idle" | "checking" | "confirmed";
 
 export default function VerificationPanel({
   tier,
@@ -74,6 +68,27 @@ export default function VerificationPanel({
   const isCritical = tier === "critical";
   const isMedium = tier === "medium";
   const showPanel = tierMeta.rank >= 2;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [simPhase, setSimPhase] = useState<SimPhase>("idle");
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => timersRef.current.forEach((t) => clearTimeout(t));
+  }, []);
+
+  function selectMethod(id: string) {
+    timersRef.current.forEach((t) => clearTimeout(t));
+    timersRef.current = [];
+    if (selected === id) {
+      setSelected(null);
+      setSimPhase("idle");
+      return;
+    }
+    setSelected(id);
+    setSimPhase("checking");
+    const t1 = setTimeout(() => setSimPhase("confirmed"), 1200);
+    timersRef.current.push(t1);
+  }
 
   if (!showPanel && !isMedium) {
     return (
@@ -84,7 +99,7 @@ export default function VerificationPanel({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-vn-green" aria-hidden="true" />
           <div>
-            <h3 id="verification-heading" className="text-sm font-bold text-vn-text">
+            <h3 id="verification-heading" className="text-sm font-bold text-vn-navy">
               No additional verification required
             </h3>
             <p className="mt-1 text-sm leading-relaxed text-vn-muted">
@@ -106,7 +121,7 @@ export default function VerificationPanel({
         <div className="flex items-start gap-3">
           <PhoneCall className="mt-0.5 h-5 w-5 shrink-0 text-vn-amber" aria-hidden="true" />
           <div>
-            <h3 id="verification-heading" className="text-sm font-bold text-vn-text">
+            <h3 id="verification-heading" className="text-sm font-bold text-vn-navy">
               Caution — verify before sharing
             </h3>
             <p className="mt-1 text-sm leading-relaxed text-vn-muted">
@@ -118,8 +133,6 @@ export default function VerificationPanel({
       </section>
     );
   }
-
-  const stepsState = VERIFICATION_STEPS.map((step) => stepState(step, status));
 
   function finish(next: VerificationStatus) {
     if (next === "verified") {
@@ -140,17 +153,19 @@ export default function VerificationPanel({
     onStatusChange(next);
   }
 
+  const allVerifiedHere = status === "verified";
+  const allBlockedHere = status === "blocked";
+
   return (
     <section
       aria-labelledby="verification-heading"
       className="relative overflow-hidden rounded-2xl border p-5 sm:p-6"
       style={{
         borderColor: `${tierMeta.hex}55`,
-        background: `linear-gradient(150deg, ${tierMeta.hex}14, #0b1b32 55%)`,
+        background: `linear-gradient(150deg, ${tierMeta.hex}14, #F5F8FC 55%)`,
       }}
     >
-      <div className="flex flex-col gap-4">
-        {/* Warning banner */}
+      <div className="flex flex-col gap-5">
         <div className="flex items-start gap-3">
           <span
             className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
@@ -165,105 +180,176 @@ export default function VerificationPanel({
           <div className="min-w-0">
             <h3
               id="verification-heading"
-              className="text-base font-bold text-vn-text"
+              className="text-base font-bold text-vn-navy"
             >
-              {status === "verified"
+              {allVerifiedHere
                 ? "Independently verified"
-                : status === "blocked"
+                : allBlockedHere
                   ? "Interaction blocked — do not proceed"
                   : isCritical
                     ? "Critical impersonation risk"
                     : "Independent verification recommended"}
             </h3>
             <p className="mt-1 text-sm leading-relaxed text-vn-muted">
-              {isCritical
-                ? "Do not share OTPs, passwords, money, or confidential information until the caller is independently verified."
-                : "This call carries a credible impersonation signal. Confirm the caller's identity out-of-band before taking any sensitive action."}
+              {allVerifiedHere
+                ? "The caller passed an out-of-band check. Treat shared information as confirmed."
+                : allBlockedHere
+                  ? "This interaction stays blocked until you re-open verification."
+                  : isCritical
+                    ? "Do not share OTPs, passwords, money, or confidential information until the caller is independently verified."
+                    : "This call carries a credible impersonation signal. Confirm the caller's identity out-of-band before taking any sensitive action."}
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-vn-border bg-vn-navy/40 p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-vn-muted">
-            <ShieldCheck className="h-4 w-4 text-vn-cyan" aria-hidden="true" />
-            Why independent verification?
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-vn-muted">
-            Detection alone cannot stop an attack — the caller still controls the conversation.
-            VAANISHIELD buys you time by forcing a check against a channel the attacker cannot
-            impersonate. You do not need to argue with the caller; just verify in private.
-          </p>
-        </div>
+        {!allVerifiedHere && !allBlockedHere && (
+          <>
+            <ol
+              aria-label="Verification workflow"
+              className="flex items-center gap-2 text-[11px] font-semibold text-vn-muted"
+            >
+              {[
+                { n: "1", label: "Select method" },
+                { n: "2", label: "Confirm channel" },
+                { n: "3", label: "Resolve" },
+              ].map((step, i) => {
+                const stepDone = simPhase === "confirmed" ? i <= 1 : simPhase === "checking" ? i === 0 : false;
+                const stepActive = (simPhase === "idle" && i === 0) || (simPhase === "checking" && i === 1);
+                return (
+                  <li key={step.n} className="flex items-center gap-2">
+                    <span
+                      className={`flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold ${
+                        stepDone
+                          ? "border-vn-green/50 bg-vn-green/10 text-vn-green"
+                          : stepActive
+                            ? "border-vn-cyan/60 bg-vn-cyan/15 text-vn-cyan"
+                            : "border-vn-border bg-vn-page text-vn-muted"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {stepDone ? <Check className="h-3 w-3" /> : step.n}
+                    </span>
+                    {step.label}
+                    {i < 2 && <span className="h-px w-4 bg-vn-border" aria-hidden="true" />}
+                  </li>
+                );
+              })}
+            </ol>
 
-        {/* Steps */}
-        <ol className="space-y-2.5">
-          {VERIFICATION_STEPS.map((step, index) => {
-            const state = stepsState[index];
-            return (
-              <li key={step.id} className="flex items-start gap-3">
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-colors ${
-                    state === "done"
-                      ? "border-vn-green/60 bg-vn-green/15 text-vn-green"
-                      : state === "blocked"
-                        ? "border-vn-red/60 bg-vn-red/15 text-vn-red"
-                        : state === "active"
-                          ? "border-vn-cyan/70 bg-vn-cyan/15 text-vn-cyan"
-                          : "border-vn-border bg-white/5 text-vn-muted"
-                  }`}
-                >
-                  {state === "done" ? (
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                  ) : state === "blocked" ? (
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <CircleDashed className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-vn-text">{step.label}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-vn-muted">
-                    {step.description}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
+                Step 1 — Choose a verification channel
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {VERIFICATION_STEPS.map((step) => {
+                  const isSelected = selected === step.id;
+                  return (
+                    <button
+                      key={step.id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => selectMethod(step.id)}
+                      className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan ${
+                        isSelected
+                          ? "border-vn-cyan/60 bg-vn-cyan/10 shadow-lg shadow-vn-cyan/10"
+                          : "border-vn-border bg-white hover:border-vn-cyan/30"
+                      }`}
+                    >
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-vn-border bg-vn-page text-vn-muted">
+                        {isSelected ? (
+                          <Check className="h-4 w-4 text-vn-cyan" aria-hidden="true" />
+                        ) : (
+                          <CircleDashed className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-bold text-vn-navy">{step.label}</span>
+                          <span
+                            className={`rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${
+                              isSelected
+                                ? "border-vn-cyan/40 bg-vn-cyan/10 text-vn-cyan"
+                                : "border-vn-border bg-vn-page text-vn-muted"
+                            }`}
+                          >
+                            {step.tag}
+                          </span>
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-vn-muted">
+                          {step.description}
+                        </span>
 
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-3 border-t border-vn-border pt-4">
-          <button
-            type="button"
-            onClick={() => finish("verified")}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-vn-green to-vn-cyan px-5 py-2.5 text-sm font-bold text-vn-navy shadow-lg shadow-vn-green/20 transition-all hover:brightness-110 active:scale-[0.98]"
-          >
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            Mark as Verified
-          </button>
-          <button
-            type="button"
-            onClick={() => finish("blocked")}
-            className="inline-flex items-center gap-2 rounded-xl border border-vn-red/50 bg-vn-red/10 px-5 py-2.5 text-sm font-bold text-vn-red transition-colors hover:bg-vn-red/20"
-          >
-            <Lock className="h-4 w-4" aria-hidden="true" />
-            Keep Interaction Blocked
-          </button>
-          <button
-            type="button"
-            onClick={() => finish("dismissed")}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-vn-muted transition-colors hover:text-vn-text"
-          >
-            Dismiss Warning
-          </button>
-        </div>
+                        {isSelected && simPhase !== "idle" && (
+                          <span
+                            className="mt-2 flex items-center gap-1.5 rounded-lg border border-vn-cyan/30 bg-vn-cyan/10 px-2 py-1 text-[11px] font-semibold text-vn-cyan"
+                            aria-live="polite"
+                          >
+                            {simPhase === "checking" ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                                Simulating trusted-channel confirmation…
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                                Simulated response confirmed on this channel.
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Simulation note */}
-        <p className="flex items-center gap-1.5 text-[11px] text-vn-muted/80">
+            <div className="rounded-xl border border-vn-border bg-white p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-vn-muted">
+                <ShieldCheck className="h-4 w-4 text-vn-cyan" aria-hidden="true" />
+                Why independent verification?
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-vn-muted">
+                Detection alone cannot stop an attack — the caller still controls the conversation.
+                VAANISHIELD buys you time by forcing a check against a channel the attacker cannot
+                impersonate. You do not need to argue with the caller; just verify in private. All
+                checks here are simulations — no real calls, SMS, or messages are sent.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 border-t border-vn-border pt-4">
+              <button
+                type="button"
+                onClick={() => finish("verified")}
+                disabled={!selected}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-vn-green to-vn-cyan px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-vn-green/20 transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                Mark as Verified
+              </button>
+              <button
+                type="button"
+                onClick={() => finish("blocked")}
+                className="inline-flex items-center gap-2 rounded-xl border border-vn-red/50 bg-vn-red/10 px-5 py-2.5 text-sm font-bold text-vn-red transition-colors hover:bg-vn-red/20"
+              >
+                <Lock className="h-4 w-4" aria-hidden="true" />
+                Keep Interaction Blocked
+              </button>
+              <button
+                type="button"
+                onClick={() => finish("dismissed")}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-vn-muted transition-colors hover:text-vn-navy"
+              >
+                Dismiss Warning
+              </button>
+            </div>
+          </>
+        )}
+
+        <p className="flex items-center gap-1.5 text-[11px] text-vn-muted">
           <MessageSquareText className="h-3.5 w-3.5" aria-hidden="true" />
-          Prototype simulation only — no real calls, SMS, payments, or telecom actions are
-          intercepted.
+          Prototype simulation only — no real telecom interception, SMS, WhatsApp, or payment
+          blocking is performed.
         </p>
       </div>
     </section>

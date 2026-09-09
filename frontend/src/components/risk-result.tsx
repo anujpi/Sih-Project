@@ -62,10 +62,9 @@ export default function RiskResult({
   return (
     <section
       aria-labelledby="risk-result-heading"
-      className="glass-panel overflow-hidden"
+      className="card-surface overflow-hidden"
     >
       <div className="grid gap-0 lg:grid-cols-[320px_1fr]">
-        {/* Score panel */}
         <div
           className="flex flex-col items-center justify-center gap-2 border-b border-vn-border p-6 lg:border-b-0 lg:border-r"
           style={{
@@ -78,26 +77,38 @@ export default function RiskResult({
           </p>
         </div>
 
-        {/* Recommendation panel */}
         <div className="flex flex-col p-6">
           <div className="flex flex-wrap items-center gap-2">
             <h3
               id="risk-result-heading"
-              className="text-xl font-bold tracking-tight text-vn-text"
+              className="text-xl font-bold tracking-tight text-vn-navy"
             >
               {meta?.scenarioLabel ?? "Risk assessment"}
             </h3>
             <TierBadge tier={tier} />
             {meta?.isDemo && (
-              <span className="rounded-full border border-vn-violet/30 bg-vn-violet/10 px-2 py-0.5 text-[11px] font-medium text-vn-violet">
-                Demo
+              <span className="rounded-full border border-vn-primary/25 bg-vn-primary/8 px-2 py-0.5 text-[11px] font-medium text-vn-primary">
+                Demo Scenario
               </span>
             )}
           </div>
 
-          <p className="mt-3 text-base leading-relaxed text-vn-text/90">
+          <p className="mt-3 text-base leading-relaxed text-vn-secondary">
             {result.risk.response}
           </p>
+
+          {tier === "critical" && (
+            <div
+              role="alert"
+              className="mt-4 rounded-xl border border-vn-red/40 bg-vn-red/10 p-4"
+            >
+              <p className="inline-flex items-center gap-2 text-sm font-bold text-vn-red">
+                <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+                Do not share OTPs, passwords, money, or confidential information until the
+                caller is independently verified.
+              </p>
+            </div>
+          )}
 
           <div className="mt-5 space-y-2">
             <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
@@ -130,7 +141,7 @@ export default function RiskResult({
               <button
                 type="button"
                 onClick={onAnalyzeAnother}
-                className="inline-flex items-center gap-2 rounded-lg border border-vn-border bg-white/5 px-4 py-2 text-sm font-semibold text-vn-text transition-colors hover:border-vn-cyan/40 hover:text-vn-cyan"
+                className="inline-flex items-center gap-2 rounded-lg border border-vn-border bg-white px-4 py-2 text-sm font-semibold text-vn-navy transition-colors hover:border-vn-cyan/40 hover:text-vn-cyan"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 Analyze another interaction

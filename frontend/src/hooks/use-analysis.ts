@@ -10,15 +10,18 @@ import {
 import {
   AnalysisMeta,
   AnalysisResponse,
+  AnalysisState as AnalysisStateType,
   PipelineStage,
   PipelineStageStatus,
   RecentAnalysis,
   RiskTier,
+  TimelineEvent,
   VerificationStatus,
 } from "@/lib/types";
 import { AnalysisInputState } from "@/components/audio-upload";
 import {
   getDemoResponse,
+  getStreamEvents,
   SCENARIO_LABELS,
 } from "@/lib/demo-scenarios";
 import { analyzeAudio, ApiClientError, friendlyApiError } from "@/lib/api-client";
@@ -38,27 +41,27 @@ export const PIPELINE_STEPS: PipelineStepDef[] = [
   {
     id: "authenticity",
     label: "Voice Authenticity",
-    statusText: "Extracting acoustic features",
-    completeText: "Acoustic fingerprint extracted",
+    statusText: "Extracting voice features...",
+    completeText: "Voice features extracted",
   },
   {
     id: "identity",
     label: "Identity Verification",
-    statusText: "Comparing speaker identity",
-    completeText: "Speaker identity compared",
+    statusText: "Comparing trusted identity...",
+    completeText: "Identity compared",
     skippedText: "Identity verification not performed",
   },
   {
     id: "intent",
-    label: "Speech-to-Text + Intent",
-    statusText: "Transcribing conversation",
-    completeText: "Conversation transcribed",
+    label: "Intent Analysis",
+    statusText: "Transcribing conversation...",
+    completeText: "Scanning for risky intent...",
   },
   {
     id: "risk",
-    label: "Unified Risk Engine",
-    statusText: "Calculating impersonation risk",
-    completeText: "Impersonation risk calculated",
+    label: "Risk Engine",
+    statusText: "Building explainable risk verdict...",
+    completeText: "Risk verdict built",
   },
 ];
 
@@ -108,6 +111,10 @@ function formatTimestamp(d: Date): string {
   });
 }
 
+function formatTime(d: Date): string {
+  return d.toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
 export interface AnalysisState {
   systemOnline: boolean;
   checkingSystem: boolean;
@@ -119,6 +126,8 @@ export interface AnalysisState {
   meta: AnalysisMeta | null;
   verificationStatus: VerificationStatus;
   recent: RecentAnalysis[];
+  timeline: TimelineEvent[];
+  analysisState: AnalysisStateType;
 }
 
 export function useAnalysis() {
@@ -133,6 +142,8 @@ export function useAnalysis() {
     meta: null,
     verificationStatus: "none",
     recent: [],
+    timeline: [],
+    analysisState: "idle",
   });
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const retryStateRef = useRef<AnalysisInputState | null>(null);
@@ -146,10 +157,26 @@ export function useAnalysis() {
     }));
   }, []);
 
+  const pushTimeline = useCallback((message: string, layer?: TimelineEvent["layer"], type: TimelineEvent["type"] = "info") => {
+    setState((prev) => ({
+      ...prev,
+      timeline: [...prev.timeline, {
+        id: makeId(),
+        time: formatTime(new Date()),
+        message,
+        layer,
+        type,
+      }].slice(-50),
+    }));
+  }, []);
+
+  const setAnalysisState = useCallback((analysisState: AnalysisStateType) => {
+    setState((prev) => ({ ...prev, analysisState }));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
-      // Health check is informational only - it never hard-fails the demo.
       setState((prev) => ({ ...prev, checkingSystem: true }));
       const ok = await import("@/lib/api-client").then((m) => m.checkHealth());
       if (!cancelled) {
@@ -187,6 +214,8 @@ export function useAnalysis() {
       verificationStatus: "none",
       errorMessage: null,
       canRetry: false,
+      timeline: [],
+      analysisState: "idle",
     }));
     retryStateRef.current = null;
   }, []);
@@ -229,9 +258,32 @@ export function useAnalysis() {
         timestamp: formatTimestamp(new Date()),
       };
       setState((prev) => ({ ...prev, isProcessing: true, meta }));
+      setAnalysisState("queued");
 
       const identityAvailable =
         input.referenceAudioFile !== null || input.claimedIdentity !== "Not specified";
+
+      // Emit streaming timeline events
+      const events = getStreamEvents(input.scenario);
+      let delay = 0;
+      events.forEach((ev) => {
+        delay += ev.delayMs;
+        schedule(() => {
+          pushTimeline(ev.message, ev.layer, ev.type);
+        }, delay);
+      });
+
+      // Update analysis state as events progress
+      const stageEvents: Array<{ at: number; state: AnalysisStateType }> = [
+        { at: SCIENCE(events, 0, 2), state: "voice_processing" },
+        { at: SCIENCE(events, 0, 5), state: "identity_processing" },
+        { at: SCIENCE(events, 0, 7), state: "transcript_updating" },
+        { at: SCIENCE(events, 0.3 * events.length + 2), state: "intent_processing" },
+        { at: SCIENCE(events, 0.7 * events.length), state: "risk_recalculating" },
+      ];
+      stageEvents.forEach((se) => {
+        schedule(() => setAnalysisState(se.state), se.at);
+      });
 
       PIPELINE_STEPS.forEach((def, index) => {
         schedule(
@@ -274,7 +326,11 @@ export function useAnalysis() {
                       isProcessing: false,
                       result: value,
                       verificationStatus: "none",
+                      analysisState: value.risk.tier === "high" || value.risk.tier === "critical"
+                        ? "verification_required"
+                        : "complete",
                     }));
+                    pushTimeline("Analysis complete — verdict ready", "risk", "success");
                   }, PIPELINE_COMPLETE_DELAY);
                 }
               },
@@ -285,7 +341,7 @@ export function useAnalysis() {
         );
       });
     },
-    [resetPipeline, schedule, updateStage, recordAnalysis]
+    [resetPipeline, schedule, updateStage, recordAnalysis, pushTimeline, setAnalysisState]
   );
 
   const runApi = useCallback(
@@ -300,6 +356,7 @@ export function useAnalysis() {
         timestamp: formatTimestamp(new Date()),
       };
       setState((prev) => ({ ...prev, isProcessing: true, meta }));
+      setAnalysisState("queued");
       retryStateRef.current = input;
 
       let startedIdx = 0;
@@ -317,6 +374,7 @@ export function useAnalysis() {
       timersRef.current.push(setTimeout(() => clearInterval(startTick), 4000));
 
       try {
+        pushTimeline("Sending audio to VAANISHIELD API", undefined, "info");
         const value = await analyzeAudio(input.audioFile!, input.referenceAudioFile);
         PIPELINE_STEPS.forEach((def, index) => {
           schedule(
@@ -340,7 +398,11 @@ export function useAnalysis() {
             result: value,
             verificationStatus: "none",
             canRetry: false,
+            analysisState: value.risk.tier === "high" || value.risk.tier === "critical"
+              ? "verification_required"
+              : "complete",
           }));
+          pushTimeline("Analysis complete — verdict ready", "risk", "success");
           retryStateRef.current = null;
         }, PIPELINE_STEPS.length * 220 + 250);
       } catch (err) {
@@ -351,10 +413,12 @@ export function useAnalysis() {
             err instanceof ApiClientError ? friendlyApiError(err) : friendlyApiError(err),
           canRetry: true,
           stages: prev.stages.map((s) => ({ ...s, status: "error" })),
+          analysisState: "error",
         }));
+        pushTimeline("Analysis failed — unable to screen the call", "risk", "warning");
       }
     },
-    [resetPipeline, schedule, updateStage, recordAnalysis]
+    [resetPipeline, schedule, updateStage, recordAnalysis, pushTimeline, setAnalysisState]
   );
 
   const runAnalysis = useCallback(
@@ -395,6 +459,9 @@ export function useAnalysis() {
             ? ("skipped" as PipelineStageStatus)
             : ("completed" as PipelineStageStatus),
       })),
+      analysisState: record.result.risk.tier === "high" || record.result.risk.tier === "critical"
+        ? "verification_required"
+        : "complete",
     }));
   }, [resetPipeline]);
 
@@ -404,7 +471,11 @@ export function useAnalysis() {
   }, []);
 
   const setVerificationStatus = useCallback((status: VerificationStatus) => {
-    setState((prev) => ({ ...prev, verificationStatus: status }));
+    setState((prev) => ({
+      ...prev,
+      verificationStatus: status,
+      analysisState: status === "verified" ? "verified" : status === "blocked" ? "blocked" : prev.analysisState,
+    }));
   }, []);
 
   const analyzeAnother = useCallback(() => {
@@ -427,4 +498,16 @@ export function useAnalysis() {
     setVerificationStatus,
     analyzeAnother,
   };
+}
+
+function SCIENCE(source: unknown, start: number, count?: number): number {
+  let total = 0;
+  if (Array.isArray(source)) {
+    const end = count !== undefined ? start + count : source.length;
+    for (let i = start; i < end && i < source.length; i++) {
+      const ev = source[i] as { delayMs?: number };
+      total += ev.delayMs ?? 0;
+    }
+  }
+  return total;
 }

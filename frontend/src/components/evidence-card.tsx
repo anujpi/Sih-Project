@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Info, Sparkles } from "lucide-react";
+import { ChevronDown, Info, ShieldCheck } from "lucide-react";
 import { useState, ReactNode } from "react";
 import { StatusBadge, StatusBadgeVariant } from "@/components/status-badge";
 
@@ -19,24 +19,24 @@ interface EvidenceCardProps {
 
 const ACCENT_STYLES = {
   cyan: {
-    icon: "bg-vn-cyan/15 text-vn-cyan",
-    topBorder: "from-vn-cyan/50",
+    icon: "bg-vn-cyan/10 text-vn-cyan",
+    topBorder: "from-vn-cyan",
   },
   indigo: {
-    icon: "bg-vn-indigo/15 text-vn-indigo",
-    topBorder: "from-vn-indigo/50",
+    icon: "bg-vn-indigo/10 text-vn-indigo",
+    topBorder: "from-vn-indigo",
   },
   violet: {
-    icon: "bg-vn-violet/15 text-vn-violet",
-    topBorder: "from-vn-violet/50",
+    icon: "bg-vn-indigo/10 text-vn-indigo",
+    topBorder: "from-vn-indigo",
   },
   green: {
-    icon: "bg-vn-green/15 text-vn-green",
-    topBorder: "from-vn-green/50",
+    icon: "bg-vn-green/10 text-vn-green",
+    topBorder: "from-vn-green",
   },
   amber: {
-    icon: "bg-vn-amber/15 text-vn-amber",
-    topBorder: "from-vn-amber/50",
+    icon: "bg-vn-amber/10 text-vn-amber",
+    topBorder: "from-vn-amber",
   },
 };
 
@@ -58,12 +58,12 @@ export default function EvidenceCard({
   return (
     <article
       id={id}
-      className={`group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-vn-border bg-vn-surface/50 shadow-lg shadow-transparent transition-all hover:-translate-y-0.5 hover:shadow-vn-cyan/5 ${
+      className={`group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-vn-border bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md ${
         expanded ? "hover:translate-y-0" : ""
       }`}
     >
       <div
-        className={`h-0.5 w-full bg-gradient-to-r ${styles.topBorder} to-transparent`}
+        className={`h-0.5 w-full bg-gradient-to-r ${styles.topBorder} to-transparent opacity-40`}
         aria-hidden="true"
       />
       <div className="flex flex-1 flex-col p-5">
@@ -75,7 +75,7 @@ export default function EvidenceCard({
               {icon}
             </span>
             <div className="min-w-0">
-              <h4 className="truncate text-sm font-bold text-vn-text">{title}</h4>
+              <h4 className="truncate text-sm font-bold text-vn-navy">{title}</h4>
               <StatusBadge variant={statusVariant} label={statusLabel} />
             </div>
           </div>
@@ -85,7 +85,7 @@ export default function EvidenceCard({
               aria-expanded={expanded}
               aria-label={expanded ? "Collapse evidence" : "Expand evidence"}
               onClick={() => setExpanded((v) => !v)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vn-border bg-white/5 text-vn-muted transition-colors hover:border-vn-cyan/40 hover:text-vn-cyan"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-vn-border bg-vn-page text-vn-muted transition-colors hover:border-vn-primary/40 hover:text-vn-primary"
             >
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -105,7 +105,7 @@ export default function EvidenceCard({
               type="button"
               aria-expanded={expanded}
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-vn-cyan transition-colors hover:text-vn-violet"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-vn-primary transition-colors hover:text-vn-blue"
             >
               <Info className="h-3.5 w-3.5" aria-hidden="true" />
               {expanded ? "Hide explanation" : explanationTitle ?? "How was this scored?"}
@@ -115,8 +115,8 @@ export default function EvidenceCard({
               />
             </button>
             {expanded && (
-              <div className="mt-2 rounded-xl border border-vn-border bg-vn-navy/50 p-3.5 vn-anim-rise">
-                <p className="text-xs leading-relaxed text-vn-muted">{explanation}</p>
+              <div className="mt-2 rounded-xl border border-vn-border bg-vn-surface-blue p-3.5 vn-anim-rise">
+                <p className="text-xs leading-relaxed text-vn-secondary">{explanation}</p>
               </div>
             )}
           </div>
@@ -124,7 +124,7 @@ export default function EvidenceCard({
       </div>
 
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <Sparkles className="absolute right-4 top-14 h-4 w-4 text-vn-cyan/30" aria-hidden="true" />
+        <ShieldCheck className="absolute right-4 top-14 h-4 w-4 text-vn-primary/10" aria-hidden="true" />
       </div>
     </article>
   );
@@ -140,7 +140,7 @@ export function MeterBar({
   heightClass?: string;
 }) {
   return (
-    <div className={`w-full overflow-hidden rounded-full bg-white/8 ${heightClass}`}>
+    <div className={`w-full overflow-hidden rounded-full bg-vn-border ${heightClass}`}>
       <div
         className={`h-full rounded-full transition-all duration-700 ${heightClass}`}
         style={{ width: `${Math.min(100, Math.max(0, value))}%`, background: color }}
@@ -160,8 +160,8 @@ export function KeyValue({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 text-xs">
-      <span className="text-vn-muted">{label}</span>
-      <span className={`text-right font-semibold text-vn-text ${mono ? "font-mono" : ""}`}>
+      <span className="text-vn-secondary">{label}</span>
+      <span className={`text-right font-semibold text-vn-navy ${mono ? "font-mono" : ""}`}>
         {value}
       </span>
     </div>

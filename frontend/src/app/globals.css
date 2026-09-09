@@ -1,20 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --vn-navy: #07111f;
-  --vn-midnight: #0b1b32;
-  --vn-surface: #102642;
-  --vn-elevated: #142f4d;
-  --vn-cyan: #38d6ff;
-  --vn-indigo: #6c63ff;
-  --vn-violet: #a78bfa;
-  --vn-green: #34d399;
-  --vn-amber: #fbbf24;
-  --vn-orange: #fb923c;
-  --vn-red: #f43f5e;
-  --vn-text: #f8fafc;
-  --vn-muted: #94a3b8;
-  --vn-border: rgba(148, 163, 184, 0.18);
+  /* === Light theme palette === */
+  --vn-page: #F5F8FC;
+  --vn-surface: #FFFFFF;
+  --vn-surface-blue: #EEF6FF;
+  --vn-surface-blue-gray: #E7EFF8;
+
+  --vn-navy: #102A43;
+  --vn-navy-deep: #16324F;
+  --vn-text: #16324F;
+  --vn-secondary: #486581;
+  --vn-muted: #829AB1;
+
+  --vn-border: #D9E2EC;
+  --vn-border-light: #E7EFF8;
+
+  --vn-primary: #1565D8;
+  --vn-blue: #2F80ED;
+  --vn-cyan: #00A7C7;
+  --vn-indigo: #5B5FEF;
+
+  --vn-green: #159A6B;
+  --vn-amber: #D97706;
+  --vn-orange: #EA6A00;
+  --vn-red: #D92D4F;
 
   /* Layout tokens */
   --content-max-width: 1280px;
@@ -55,16 +65,23 @@
 }
 
 @theme inline {
-  --color-background: var(--vn-navy);
+  --color-background: var(--vn-page);
   --color-foreground: var(--vn-text);
-  --color-muted: var(--vn-muted);
-  --color-vn-navy: var(--vn-navy);
-  --color-vn-midnight: var(--vn-midnight);
+  --color-vn-page: var(--vn-page);
   --color-vn-surface: var(--vn-surface);
-  --color-vn-elevated: var(--vn-elevated);
+  --color-vn-surface-blue: var(--vn-surface-blue);
+  --color-vn-surface-blue-gray: var(--vn-surface-blue-gray);
+  --color-vn-navy: var(--vn-navy);
+  --color-vn-navy-deep: var(--vn-navy-deep);
+  --color-vn-text: var(--vn-text);
+  --color-vn-secondary: var(--vn-secondary);
+  --color-vn-muted: var(--vn-muted);
+  --color-vn-border: var(--vn-border);
+  --color-vn-border-light: var(--vn-border-light);
+  --color-vn-primary: var(--vn-primary);
+  --color-vn-blue: var(--vn-blue);
   --color-vn-cyan: var(--vn-cyan);
   --color-vn-indigo: var(--vn-indigo);
-  --color-vn-violet: var(--vn-violet);
   --color-vn-green: var(--vn-green);
   --color-vn-amber: var(--vn-amber);
   --color-vn-orange: var(--vn-orange);
@@ -78,7 +95,7 @@ html {
 }
 
 body {
-  background-color: var(--vn-navy);
+  background-color: var(--vn-page);
   color: var(--vn-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -86,34 +103,43 @@ body {
 }
 
 ::selection {
-  background-color: rgba(56, 214, 255, 0.28);
-  color: #fff;
+  background-color: rgba(21, 101, 216, 0.18);
+  color: #102A43;
 }
 
 *:focus-visible {
-  outline: 2px solid var(--vn-cyan);
+  outline: 2px solid var(--vn-primary);
   outline-offset: 2px;
 }
 
-/* Frosted-glass panel */
-.glass-panel {
-  background: linear-gradient(
-    160deg,
-    rgba(20, 47, 77, 0.55),
-    rgba(16, 38, 66, 0.4)
-  );
+/* Shared card surface */
+.card-surface {
+  background: var(--vn-surface);
   border: 1px solid var(--vn-border);
   border-radius: var(--radius-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   box-shadow:
-    0 20px 50px -20px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(248, 250, 252, 0.06);
+    0 1px 3px rgba(16, 42, 67, 0.06),
+    0 4px 12px rgba(16, 42, 67, 0.04);
+}
+
+/* Soft elevated card */
+.card-elevated {
+  background: var(--vn-surface);
+  border: 1px solid var(--vn-border);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 4px 16px rgba(16, 42, 67, 0.08),
+    0 1px 3px rgba(16, 42, 67, 0.06);
+}
+
+body {
+  background-image:
+    radial-gradient(1200px 600px at 20% -5%, rgba(21, 101, 216, 0.04), transparent 60%),
+    radial-gradient(900px 500px at 90% 0%, rgba(0, 167, 199, 0.03), transparent 55%);
 }
 
 /*
- * Shared horizontal container for the whole site. One left/right edge for
- * navbar, hero, sections, CTA, footer, and the demo console.
+ * Shared horizontal container for the whole site.
  */
 .vn-container {
   width: 100%;
@@ -134,7 +160,7 @@ body {
   }
 }
 
-/* Consistent section vertical rhythm: 40 / 56 / 80 */
+/* Consistent section vertical rhythm */
 .vn-section {
   padding-block: var(--section-pad-mobile);
 }
@@ -154,94 +180,54 @@ body {
 /* Utility for the mesh-grid backdrop */
 .vn-grid-bg {
   background-image:
-    linear-gradient(rgba(56, 214, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 214, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(21, 101, 216, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 101, 216, 0.04) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 
 /* Animated shimmer sweep used on skeleton / progress bars */
 @keyframes vn-sweep {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .vn-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(56, 214, 255, 0.12),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(21, 101, 216, 0.08), transparent);
   background-size: 200% 100%;
   animation: vn-sweep 1.6s ease-in-out infinite;
 }
 
 @keyframes vn-pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 @keyframes vn-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 @keyframes vn-grow-in {
-  from {
-    transform: scale(0.92);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 @keyframes vn-rise-in {
-  from {
-    transform: translateY(14px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes vn-wave-bounce {
-  0%,
-  100% {
-    transform: scaleY(0.35);
-  }
-  50% {
-    transform: scaleY(1);
-  }
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
 }
 
 @keyframes vn-dash-flow {
-  to {
-    stroke-dashoffset: -24;
-  }
+  to { stroke-dashoffset: -24; }
 }
 
 @keyframes vn-wave-slide {
-  to {
-    stroke-dashoffset: -16;
-  }
+  to { stroke-dashoffset: -16; }
 }
 
 .vn-wave-slide {
@@ -277,16 +263,16 @@ body {
 
 /* Waveform canvas fallback bars */
 .waveform-bars span {
-  background: linear-gradient(180deg, var(--vn-cyan), var(--vn-indigo));
+  background: linear-gradient(180deg, var(--vn-primary), var(--vn-indigo));
 }
 
 /* Highlighted risky terms inside transcripts */
 .vn-transcript-mark {
-  background: rgba(244, 63, 94, 0.18);
-  color: #fda4af;
+  background: rgba(217, 45, 79, 0.12);
+  color: #B91C3A;
   border-radius: 3px;
   padding: 0 2px;
-  outline: 1px solid rgba(244, 63, 94, 0.35);
+  outline: 1px solid rgba(217, 45, 79, 0.25);
   font-weight: 600;
 }
 
@@ -302,6 +288,129 @@ body {
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Primary action button */
+.vn-btn-primary {
+  background: linear-gradient(135deg, #1565D8, #2F80ED);
+  color: #FFFFFF;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px -4px rgba(21, 101, 216, 0.45);
+  transition:
+    filter 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
+}
+.vn-btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 6px 20px -4px rgba(21, 101, 216, 0.55);
+}
+.vn-btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Thin animated scan ring sweep */
+@keyframes vn-scan {
+  to { transform: rotate(360deg); }
+}
+.vn-scan-ring {
+  animation: vn-scan 3s linear infinite;
+}
+
+/* Live Guard central visualization animations */
+@keyframes vn-spin-slow {
+  to { transform: rotate(360deg); }
+}
+.vn-spin-slow {
+  animation: vn-spin-slow 7s linear infinite;
+}
+.vn-spin-slow-rev {
+  animation: vn-spin-slow 7s linear infinite reverse;
+}
+
+.vn-sweep-slow {
+  animation: vn-spin-slow 3.5s linear infinite;
+}
+
+@keyframes vn-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+.vn-breathe {
+  transform-origin: center;
+  animation: vn-breathe 4s ease-in-out infinite;
+}
+
+@keyframes vn-progress-scan {
+  0% { stroke-dashoffset: var(--ring-c, 339.3); }
+  100% { stroke-dashoffset: calc(var(--ring-c, 339.3) * 0.05); }
+}
+.vn-progress-scan {
+  stroke-dasharray: var(--ring-c, 339.3);
+  animation: vn-progress-scan 4.6s linear forwards;
+}
+
+@keyframes vn-pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.vn-pop-in {
+  animation: vn-pop-in 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+
+@keyframes vn-drop {
+  0% { transform: translateY(-3px); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translateY(16px); opacity: 0; }
+}
+.vn-drop {
+  animation: vn-drop 1.3s ease-in-out infinite;
+}
+
+@keyframes vn-node-glow {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.18); }
+}
+.vn-node-glow {
+  animation: vn-node-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes vn-wave-bounce-active {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1.6); }
+}
+.vn-wave-bar-active {
+  transform-origin: center;
+  animation: vn-wave-bounce-active 0.7s ease-in-out infinite;
+}
+
+/* Timeline event entry animation */
+@keyframes vn-timeline-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.vn-timeline-in {
+  animation: vn-timeline-in 0.3s ease-out both;
+}
+
+/* Streaming cursor blink */
+@keyframes vn-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.vn-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--vn-primary);
+  margin-left: 2px;
+  animation: vn-cursor-blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -32,7 +32,7 @@ export default function IdentityCard({ result }: { result: AnalysisResponse }) {
 
   const sim = normalizeScore(identity.similarity_score);
   const match = identity.identity_match;
-  const color = match ? "#34d399" : "#fb923c";
+  const color = match ? "#159A6B" : "#EA6A00";
   const MatchIcon = match ? UserCheck : UserX;
 
   return (

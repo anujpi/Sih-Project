@@ -25,10 +25,6 @@ interface AudioVisualizerProps {
 
 const STATIC_LEVEL = 0.16;
 
-/**
- * Animated waveform made of bars. Runs a lightweight rAF loop while
- * `active` is true; shows a flat, still line otherwise.
- */
 export default function AudioVisualizer({
   active,
   bars = 32,
@@ -43,7 +39,6 @@ export default function AudioVisualizer({
     const tick = () => {
       setLevels(
         Array.from({ length: bars }, () => {
-          // pseudo-random waveform derived from time, avoids storing big state
           const t = performance.now() / 1200;
           const wave =
             0.5 +
@@ -77,7 +72,7 @@ export default function AudioVisualizer({
           }`}
           style={{
             height: `${Math.max(8, level * 100)}%`,
-            background: "linear-gradient(180deg, #38d6ff, #6c63ff)",
+            background: "linear-gradient(180deg, #2F80ED, #5B5FEF)",
             opacity: active ? 0.9 : 0.3,
             animationDelay: `${i * 40}ms`,
           }}
@@ -101,10 +96,6 @@ export interface AudioReviewControlsProps {
   onStopRecording: () => void;
 }
 
-/**
- * Play / pause / restart / delete controls shown after a file loads,
- * plus the record toggle + timer.
- */
 export function AudioReviewControls({
   fileName,
   isPlaying,
@@ -151,7 +142,7 @@ export function AudioReviewControls({
         <button
           type="button"
           onClick={onStartRecording}
-          className="inline-flex items-center gap-2 rounded-lg border border-vn-cyan/40 bg-vn-cyan/10 px-4 py-2 text-sm font-semibold text-vn-cyan transition-colors hover:bg-vn-cyan/20"
+          className="inline-flex items-center gap-2 rounded-xl border border-vn-cyan/40 bg-vn-cyan/10 px-5 py-2.5 text-sm font-bold text-vn-cyan transition-all hover:bg-vn-cyan/20 hover:shadow-lg hover:shadow-vn-cyan/10 active:scale-[0.98]"
         >
           <Activity className="h-4 w-4" aria-hidden="true" />
           Record microphone
@@ -159,9 +150,9 @@ export function AudioReviewControls({
       )}
 
       {!isRecording && fileName && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-vn-border bg-vn-navy/60 px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-vn-border bg-white px-3 py-2.5">
           <ShieldCheck className="h-4 w-4 text-vn-green" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-sm text-vn-text">
+          <span className="min-w-0 flex-1 truncate text-sm text-vn-navy">
             {fileName}
           </span>
           <div className="flex items-center gap-1">
@@ -186,7 +177,7 @@ export function AudioReviewControls({
               type="button"
               aria-label="Remove audio file"
               onClick={onDelete}
-              className="rounded-md p-1 text-vn-muted transition-colors hover:bg-white/5 hover:text-vn-red"
+              className="rounded-md p-1 text-vn-muted transition-colors hover:bg-vn-border/40 hover:text-vn-red"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -215,7 +206,7 @@ function IconButton({
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="rounded-md p-1.5 text-vn-muted transition-colors hover:bg-white/5 hover:text-vn-cyan disabled:cursor-not-allowed disabled:opacity-40"
+      className="rounded-md p-1.5 text-vn-muted transition-colors hover:bg-vn-border/40 hover:text-vn-cyan disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>

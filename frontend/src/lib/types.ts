@@ -108,3 +108,29 @@ export interface ToastMessage {
   title: string;
   message?: string;
 }
+
+export interface TimelineEvent {
+  id: string;
+  time: string;
+  message: string;
+  layer?: "voice" | "identity" | "intent" | "risk";
+  type?: "info" | "warning" | "success" | "progress";
+}
+
+export type AnalysisState =
+  | "idle"
+  | "scenario_selected"
+  | "file_selected"
+  | "queued"
+  | "streaming"
+  | "voice_processing"
+  | "identity_processing"
+  | "transcript_updating"
+  | "intent_processing"
+  | "risk_recalculating"
+  | "complete"
+  | "verification_required"
+  | "verification_in_progress"
+  | "verified"
+  | "blocked"
+  | "error";

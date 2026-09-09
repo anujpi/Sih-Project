@@ -9,7 +9,7 @@ export default function VoiceAuthenticityCard({ result }: { result: AnalysisResp
   const voice = result.voice_authenticity;
   const prob = normalizeScore(voice.synthetic_probability);
   const isSynthetic = voice.label === "synthetic" || prob >= 50;
-  const color = isSynthetic ? "#f43f5e" : "#34d399";
+  const color = isSynthetic ? "#D92D4F" : "#159A6B";
   const statusLabel = isSynthetic ? "Synthetic voice detected" : "Bonafide signal";
   const statusVariant = isSynthetic ? "processing" : "ok";
   const LabelIcon = isSynthetic ? Bot : User;
@@ -44,7 +44,7 @@ export default function VoiceAuthenticityCard({ result }: { result: AnalysisResp
         </div>
       }
       explanationTitle="How was this layer scored?"
-      explanation="Layer 1 runs a wav2vec2 classifier over 16 kHz acoustic features. A synthetic probability at or above 50% is labeled synthetic. The model was fine-tuned on in-the-wild deepfake data; when the tuning checkpoint is missing it falls back to an untrained base model, which the system reports honestly as “testing fallback”."
+      explanation="Layer 1 runs a wav2vec2 classifier over 16 kHz acoustic features. A synthetic probability at or above 50% is labeled synthetic. The model was fine-tuned on in-the-wild deepfake data; when the tuning checkpoint is missing it falls back to an untrained base model, which the system reports honestly as &ldquo;testing fallback&rdquo;."
     />
   );
 }

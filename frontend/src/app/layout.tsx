@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "VAANISHIELD — AI-Powered Voice Impersonation Defense",
   description:
-    "When a voice can be cloned, voice alone cannot be trusted. VAANISHIELD adds an intelligent security layer between suspicious voices and dangerous decisions using four explainable signals.",
+    "When a voice can be cloned, voice alone cannot be trusted. VAANISHIELD analyzes the voice, the claimed identity, and the conversation context before a dangerous decision is made.",
 };
 
 export default function RootLayout({
@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-vn-navy text-vn-text">
+      <body className="min-h-full bg-vn-page text-vn-text">
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

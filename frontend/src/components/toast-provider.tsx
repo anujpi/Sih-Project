@@ -28,8 +28,8 @@ const KIND_STYLES: Record<
   },
   info: {
     icon: Info,
-    iconClass: "text-vn-cyan",
-    ring: "border-vn-cyan/30",
+    iconClass: "text-vn-primary",
+    ring: "border-vn-primary/30",
   },
   warning: {
     icon: TriangleAlert,
@@ -84,18 +84,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={toast.id}
               role="status"
-              className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border ${style.ring} bg-vn-elevated/95 px-4 py-3 shadow-2xl backdrop-blur vn-anim-rise`}
+              className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border ${style.ring} bg-white/95 px-4 py-3 shadow-lg backdrop-blur vn-anim-rise`}
             >
               <Icon
                 className={`mt-0.5 h-5 w-5 shrink-0 ${style.iconClass}`}
                 aria-hidden="true"
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-vn-text">
+                <p className="text-sm font-semibold text-vn-navy">
                   {toast.title}
                 </p>
                 {toast.message && (
-                  <p className="mt-0.5 text-xs leading-relaxed text-vn-muted">
+                  <p className="mt-0.5 text-xs leading-relaxed text-vn-secondary">
                     {toast.message}
                   </p>
                 )}
@@ -104,7 +104,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 type="button"
                 aria-label="Dismiss notification"
                 onClick={() => dismiss(toast.id)}
-                className="shrink-0 rounded-md p-1 text-vn-muted transition-colors hover:bg-white/5 hover:text-vn-text"
+                className="shrink-0 rounded-md p-1 text-vn-muted transition-colors hover:bg-vn-surface-blue hover:text-vn-navy"
               >
                 <XCircle className="h-4 w-4" aria-hidden="true" />
               </button>
