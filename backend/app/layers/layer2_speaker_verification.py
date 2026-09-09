@@ -5,12 +5,14 @@ Uses SpeechBrain's pretrained ECAPA-TDNN speaker verification model:
   https://github.com/speechbrain/speechbrain
   (pretrained checkpoint: speechbrain/spkrec-ecapa-voxceleb)
 
-Given an incoming call's audio and a trusted reference sample (the
-"registered voiceprint" from VAANISHIELD's registry idea), returns a
-similarity score. Low similarity + high synthetic-voice probability
-from Layer 1 = strong impersonation signal.
+Given an incoming call's audio and a trusted reference (either a
+freshly uploaded reference clip, or a stored voiceprint embedding from
+the registry — see voice_registry.py), returns a similarity score.
+Low similarity + high synthetic-voice probability from Layer 1 =
+strong impersonation signal.
 """
 
+import torch
 from speechbrain.inference.speaker import SpeakerRecognition
 from speechbrain.utils.fetching import LocalStrategy
 
@@ -37,10 +39,33 @@ class SpeakerVerifier:
             local_strategy=LocalStrategy.COPY,
         )
 
-    def compare(self, audio_path: str, reference_path: str) -> dict:
-        score, prediction = self.model.verify_files(audio_path, reference_path)
-        similarity = float(score)
+    def extract_embedding(self, audio_path: str) -> torch.Tensor:
+        """
+        Compute a speaker embedding (voiceprint) for one audio file.
+        This is what gets stored in the registry — NOT the raw audio —
+        so registering a voice never means keeping someone's actual
+        recording on disk long-term.
+        """
+        signal = self.model.load_audio(audio_path)  # uses relative paths
+        # only, to avoid the Windows drive-letter/URL-parsing bug —
+        # callers must pass a relative path (see app/main.py _save_upload)
+        embedding = self.model.encode_batch(signal.unsqueeze(0))
+        return embedding.squeeze().detach().cpu()
+
+    def compare_embeddings(self, emb_a: torch.Tensor, emb_b: torch.Tensor) -> dict:
+        similarity = float(
+            torch.nn.functional.cosine_similarity(
+                emb_a.flatten(), emb_b.flatten(), dim=0
+            )
+        )
         return {
             "similarity_score": round(similarity, 4),
             "identity_match": bool(similarity >= MATCH_THRESHOLD),
         }
+
+    def compare(self, audio_path: str, reference_path: str) -> dict:
+        """Two-file comparison — used when no registry entry exists yet
+        and the caller uploads a fresh reference clip instead."""
+        emb_a = self.extract_embedding(audio_path)
+        emb_b = self.extract_embedding(reference_path)
+        return self.compare_embeddings(emb_a, emb_b)
