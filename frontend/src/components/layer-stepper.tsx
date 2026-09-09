@@ -14,66 +14,66 @@ const LAYERS = [
   {
     id: "voice",
     number: "01",
-    title: "Voice Authenticity",
+    title: "Layer 1: Voice Authenticity",
     icon: AudioLines,
-    accent: "#00A7C7",
-    eyebrow: "Layer 1",
-    copy: "A fine-tuned wav2vec2 classifier listens for the acoustic fingerprints of AI-generated speech — even high-fidelity clones.",
+    accent: "#0284C7",
+    eyebrow: "wav2vec2-base Classifier",
+    copy: "Processes 16 kHz acoustic features to detect vocoder artifacts and synthetic speech generation.",
     output: {
-      label: "Synthetic probability",
+      label: "Synthetic Probability",
       value: "91%",
-      status: "Acoustic anomaly detected",
+      status: "Acoustic Anomaly Flagged",
       statusClass: "text-vn-red",
     },
-    signal: "Acoustic features extracted from the audio stream.",
+    signal: "Feature extraction over 16 kHz audio frame sequence.",
   },
   {
     id: "identity",
     number: "02",
-    title: "Identity Verification",
+    title: "Layer 2: Speaker Verification",
     icon: Fingerprint,
-    accent: "#5B5FEF",
-    eyebrow: "Layer 2",
-    copy: "An ECAPA-TDNN voiceprint model checks the caller against a trusted reference to catch human impostors too.",
+    accent: "#4F46E5",
+    eyebrow: "SpeechBrain ECAPA-TDNN",
+    copy: "Calculates 192-dimensional speaker embedding and compares cosine similarity against Voiceprint Registry.",
     output: {
-      label: "Voice similarity",
+      label: "Speaker Similarity",
       value: "23%",
-      status: "Identity mismatch detected",
+      status: "Identity Mismatch Detected",
       statusClass: "text-vn-orange",
     },
-    signal: "Speaker embedding compared against the claimed identity.",
+    signal: "Cosine distance evaluation against stored voiceprint vector.",
   },
   {
     id: "intent",
     number: "03",
-    title: "Conversation Intent",
+    title: "Layer 3: Speech-to-Text & Intent",
     icon: MessageSquareText,
-    accent: "#2F80ED",
-    eyebrow: "Layer 3",
-    copy: "Conversations are transcribed with faster-whisper and scanned for scam pressure signals — OTPs, urgent transfers, secrecy, authority.",
+    accent: "#2563EB",
+    eyebrow: "faster-whisper + Intent Rules",
+    copy: "Transcribes phone audio and scans for 5 scam pressure indicators (OTP, money transfer, urgency, authority, secrecy).",
     output: {
-      label: "Financial request",
-      value: "High",
-      status: "OTP request detected",
+      label: "Scam Intent Risk Score",
+      value: "100%",
+      status: "OTP & Financial Transfer Triggered",
       statusClass: "text-vn-red",
     },
-    signal: "Transcript updates as speech is converted to text.",
+    signal: "ASR transcript token pattern evaluation.",
   },
   {
     id: "response",
     number: "04",
-    title: "Adaptive Response",
+    title: "Layer 4: Unified Risk Engine",
     icon: ShieldCheck,
-    accent: "#D92D4F",
-    eyebrow: "Layer 4",
-    copy: "The signals combine into one explainable 0–100 interaction-risk score with tiered response actions.",
+    accent: "#DC2626",
+    eyebrow: "Explainable Risk Formula",
+    copy: "Calculates overall risk: 0.35(L1) + 0.25(L2) + 0.40(L3), mapping score (0-100) to actionable security tiers.",
     output: {
-      label: "Overall interaction risk",
-      value: "Critical",
-      status: "Verify independently before proceeding",
+      label: "Overall Risk Verdict",
+      value: "Critical (94/100)",
+      status: "Mandatory Out-of-Band Verification",
       statusClass: "text-vn-red",
     },
-    signal: "Risk engine recalculates as new evidence arrives.",
+    signal: "Weighted 4-layer verdict recalculation.",
   },
 ];
 
@@ -83,57 +83,55 @@ export default function LayerStepper() {
   const LayerIcon = layer.icon;
 
   return (
-    <section id="technology" className="vn-section scroll-mt-24">
+    <section id="technology" className="vn-section border-b border-vn-border bg-white scroll-mt-24">
       <div className="vn-container">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-vn-primary">
-            Four intelligence layers
+          <p className="font-mono text-xs font-semibold uppercase tracking-wider text-vn-primary">
+            Architecture Walkthrough
           </p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-vn-navy sm:text-4xl">
-            How VAANISHIELD protects you
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-vn-navy sm:text-3xl">
+            Detailed 4-Layer Execution Breakdown
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-vn-secondary">
-            No single model can defend a relationship. VAANISHIELD cross-checks the voice, the
-            claimed identity, and what the caller is asking for — then explains its verdict.
+          <p className="mt-3 text-xs leading-relaxed text-vn-secondary sm:text-sm">
+            Select any layer below to inspect its model architecture, acoustic input signals, and output metrics.
           </p>
         </div>
 
-        <div className="mt-12 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           {/* Left: interactive layer selector */}
           <div className="space-y-2.5" role="tablist" aria-label="Four intelligence layers">
-            {LAYERS.map((layer, index) => {
-              const Icon = layer.icon;
+            {LAYERS.map((layerItem, index) => {
+              const Icon = layerItem.icon;
               const isActive = index === active;
               return (
                 <button
-                  key={layer.id}
+                  key={layerItem.id}
                   type="button"
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => setActive(index)}
-                  className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-primary ${
+                  className={`flex w-full items-center gap-3.5 rounded-lg border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-primary ${
                     isActive
-                      ? "border-vn-primary/25 bg-white shadow-md"
-                      : "border-vn-border bg-white/60 hover:bg-white"
+                      ? "border-vn-primary bg-vn-surface-blue shadow-sm"
+                      : "border-vn-border bg-white hover:border-vn-secondary"
                   }`}
                 >
                   <span
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm"
-                    style={{ background: isActive ? layer.accent : "#D9E2EC" }}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-vn-border bg-white text-vn-navy font-mono text-xs font-bold"
                   >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-vn-muted">
-                        {layer.number}
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                        {layerItem.number}
                       </span>
-                      <span className={`text-sm font-bold ${isActive ? "text-vn-navy" : "text-vn-secondary"}`}>
-                        {layer.title}
+                      <span className={`text-xs font-bold sm:text-sm ${isActive ? "text-vn-navy" : "text-vn-secondary"}`}>
+                        {layerItem.title}
                       </span>
                     </span>
                     <span className="mt-1 block text-xs leading-relaxed text-vn-secondary">
-                      {layer.copy}
+                      {layerItem.copy}
                     </span>
                   </span>
                   <CheckCircle2
@@ -146,37 +144,31 @@ export default function LayerStepper() {
           </div>
 
           {/* Right: active layer detail */}
-          <div className="card-surface flex flex-col overflow-hidden">
-            <div
-              className="h-1 w-full"
-              style={{ background: `linear-gradient(90deg, ${layer.accent}, transparent)` }}
-              aria-hidden="true"
-            />
-            <div className="flex flex-1 flex-col p-6 sm:p-8">
+          <div className="card-surface flex flex-col justify-between overflow-hidden p-6">
+            <div>
               <span
-                className="inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest"
-                style={{ borderColor: `${layer.accent}30`, background: `${layer.accent}0A`, color: layer.accent }}
+                className="inline-flex w-fit items-center gap-1.5 rounded border border-vn-border bg-vn-page px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-vn-navy"
               >
-                <LayerIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                <LayerIcon className="h-3.5 w-3.5 text-vn-primary" aria-hidden="true" />
                 {layer.eyebrow}
               </span>
 
-              <h3 className="mt-4 text-2xl font-extrabold tracking-tight text-vn-navy">
+              <h3 className="mt-3 text-xl font-bold text-vn-navy">
                 {layer.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-vn-secondary">
+              <p className="mt-2 text-xs leading-relaxed text-vn-secondary">
                 {layer.copy}
               </p>
 
               {/* Output example */}
-              <div className="mt-5 rounded-xl border border-vn-border bg-vn-surface-blue p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-vn-muted">
-                  Example output
+              <div className="mt-4 rounded-md border border-vn-border bg-vn-page p-4 font-mono">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                  Telemetry Output Metric
                 </p>
                 <div className="mt-2 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-xs text-vn-muted">{layer.output.label}</p>
-                    <p className="font-mono text-2xl font-bold tabular-nums" style={{ color: layer.accent }}>
+                    <p className="text-[11px] text-vn-muted">{layer.output.label}</p>
+                    <p className="text-xl font-bold tabular-nums text-vn-navy">
                       {layer.output.value}
                     </p>
                   </div>
@@ -186,21 +178,18 @@ export default function LayerStepper() {
                 </div>
               </div>
 
-              {/* Signal visual */}
-              <div className="mt-5 flex items-center gap-3 rounded-xl border border-vn-border bg-white px-4 py-3">
-                <span className="vn-pulse-soft h-2 w-2 rounded-full" style={{ background: layer.accent }} aria-hidden="true" />
-                <p className="text-xs font-medium text-vn-secondary">
-                  {layer.signal}
-                </p>
+              <div className="mt-4 flex items-center gap-2 rounded-md border border-vn-border bg-white px-3 py-2 font-mono text-xs text-vn-secondary">
+                <span className="h-2 w-2 rounded-full bg-vn-primary" aria-hidden="true" />
+                <span>{layer.signal}</span>
               </div>
-
-              <Link
-                href="/demo"
-                className="mt-auto inline-flex w-fit items-center gap-2 rounded-xl bg-vn-navy px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep hover:shadow-md"
-              >
-                Try layer {active + 1} in the demo
-              </Link>
             </div>
+
+            <Link
+              href="/demo"
+              className="mt-6 inline-flex w-fit items-center gap-2 rounded-md bg-vn-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep"
+            >
+              Test Layer {active + 1} in Security Console
+            </Link>
           </div>
         </div>
       </div>

@@ -85,8 +85,8 @@ export default function DemoShell() {
       "info",
       `${next.toUpperCase()} mode enabled`,
       next === "api"
-        ? "Upload or record audio — analysis will call POST /analyze/full on the backend."
-        : "Scenarios run fully offline. No backend required."
+        ? "Upload audio or select registered voiceprint — calls POST /analyze/full."
+        : "Scenarios run fully offline with simulated pipeline."
     );
   }
 
@@ -96,7 +96,7 @@ export default function DemoShell() {
       scenario,
       claimedIdentity: SCENARIO_DEFAULT_IDENTITY[scenario],
     }));
-    push("info", "Scenario loaded", `${SCENARIO_LABELS[scenario]} selected.`);
+    push("info", "Scenario profile loaded", `${SCENARIO_LABELS[scenario]} selected.`);
   }
 
   function handleAnalyze() {
@@ -165,7 +165,6 @@ export default function DemoShell() {
     risk: result ? `Score ${guardScore}/100` : undefined,
   };
 
-  // Streaming board status derived from pipeline + result presence
   function signalStatus(id: "authenticity" | "identity" | "intent" | "risk", fallback: boolean): SignalStatus {
     if (!isStreaming && result) return (fallback ? "complete" : "skipped");
     if (!isStreaming) return "idle";
@@ -189,7 +188,7 @@ export default function DemoShell() {
     }
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.style.transition = "box-shadow 0.25s ease";
-    el.style.boxShadow = "0 0 0 3px rgba(21, 101, 216, 0.45)";
+    el.style.boxShadow = "0 0 0 2px #1E40AF";
     window.setTimeout(() => {
       el.style.boxShadow = "";
       el.style.transition = "";
@@ -219,61 +218,76 @@ export default function DemoShell() {
   return (
     <div className="min-h-screen bg-vn-page text-vn-navy">
       {/* Demo header */}
-      <header className="sticky top-0 z-40 border-b border-vn-border bg-white/90 backdrop-blur-xl">
-        <div className="vn-container flex items-center justify-between gap-3 py-3">
-          <div className="flex min-w-0 items-center gap-3">
+      <header className="sticky top-0 z-40 border-b border-vn-border bg-white/95 backdrop-blur-md">
+        <div className="vn-container flex items-center justify-between gap-3 py-2.5">
+          <div className="flex min-w-0 items-center gap-3 font-mono">
             <Link
               href="/"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-vn-border bg-white px-3 py-1.5 text-xs font-semibold text-vn-secondary transition-colors hover:border-vn-primary/40 hover:text-vn-primary"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded border border-vn-border bg-white px-2.5 py-1 text-xs font-bold text-vn-secondary transition-colors hover:bg-vn-page hover:text-vn-navy"
             >
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
               Home
             </Link>
             <Link href="/" className="flex items-center gap-2" aria-label="VAANISHIELD home">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-vn-blue to-vn-indigo text-white">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              <span className="flex h-7 w-7 items-center justify-center rounded border border-vn-border bg-vn-navy text-white">
+                <ShieldCheck className="h-4 w-4 text-vn-blue" aria-hidden="true" />
               </span>
-              <span className="hidden font-mono text-sm font-bold tracking-wide text-vn-navy sm:inline">
-                VAANISHIELD
+              <span className="hidden font-mono text-xs font-bold tracking-wider text-vn-navy sm:inline">
+                VAANISHIELD CONSOLE
               </span>
             </Link>
           </div>
 
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-bold tracking-tight text-vn-navy sm:text-base">
-              Live Voice Security Console
+            <h1 className="truncate text-xs font-bold uppercase tracking-wider text-vn-navy sm:text-sm">
+              Live Voice Security Operations Console
             </h1>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="hidden sm:inline-flex">
-              <LiveStatusTicker variant="live" label="Protection active" />
+          <div className="flex shrink-0 items-center gap-2 font-mono text-xs">
+            <span className="hidden items-center gap-1.5 rounded border border-vn-border bg-vn-page px-2 py-1 sm:inline-flex">
+              <span className={`h-2 w-2 rounded-full ${analysis.systemOnline ? "bg-vn-green animate-pulse" : "bg-vn-amber"}`} />
+              <span className="text-[11px] font-bold text-vn-navy">
+                {analysis.checkingSystem ? "Checking API..." : analysis.systemOnline ? "Backend 200 OK" : "Backend Offline"}
+              </span>
             </span>
-            <span
-              className={`hidden items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium md:inline-flex ${
-                mode === "demo"
-                  ? "border-vn-indigo/25 bg-vn-indigo/5 text-vn-indigo"
-                  : "border-vn-blue/25 bg-vn-blue/5 text-vn-blue"
-              }`}
-            >
-              {mode === "demo" ? (
-                <FlaskConical className="h-3.5 w-3.5" aria-hidden="true" />
-              ) : (
-                <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              {mode === "demo" ? "Demo Mode" : "API Mode"}
-            </span>
+            <div className="inline-flex rounded border border-vn-border bg-vn-page p-0.5">
+              <button
+                type="button"
+                onClick={() => switchMode("demo")}
+                className={`inline-flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-bold transition-all ${
+                  mode === "demo"
+                    ? "bg-vn-navy text-white shadow-sm"
+                    : "text-vn-muted hover:text-vn-navy"
+                }`}
+              >
+                <FlaskConical className="h-3 w-3" aria-hidden="true" />
+                Offline Demo
+              </button>
+              <button
+                type="button"
+                onClick={() => switchMode("api")}
+                className={`inline-flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-bold transition-all ${
+                  mode === "api"
+                    ? "bg-vn-blue text-white shadow-sm"
+                    : "text-vn-muted hover:text-vn-navy"
+                }`}
+              >
+                <Cpu className="h-3 w-3" aria-hidden="true" />
+                Live API
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="vn-container py-6 lg:py-8">
+      <main className="vn-container py-5 lg:py-7">
         {/* Stage stepper */}
         <StageStepper current={stage} />
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
           {/* Main workspace */}
-          <div className="min-w-0 space-y-6">
+          <div className="min-w-0 space-y-5">
             {/* Stage 1: Prepare */}
             <ScenarioSelector value={input.scenario} onChange={selectScenario} disabled={analysis.isProcessing} />
 
@@ -315,29 +329,29 @@ export default function DemoShell() {
             {analysis.errorMessage && (
               <div
                 role="alert"
-                className="rounded-2xl border border-vn-red/40 bg-vn-red/5 p-5"
+                className="rounded-lg border border-vn-red/40 bg-vn-red/10 p-4 font-mono"
               >
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-vn-red">
+                <h3 className="flex items-center gap-2 text-xs font-bold text-vn-red">
                   <OctagonAlert className="h-4 w-4" aria-hidden="true" />
-                  Analysis could not be completed
+                  Analysis Error: Ingest Failed
                 </h3>
-                <p className="mt-1 text-sm text-vn-secondary">{analysis.errorMessage}</p>
-                <div className="mt-4 flex gap-2">
+                <p className="mt-1 font-sans text-xs text-vn-secondary">{analysis.errorMessage}</p>
+                <div className="mt-3 flex gap-2">
                   {analysis.canRetry && (
                     <>
                       <button
                         type="button"
                         onClick={analysis.retry}
-                        className="inline-flex items-center gap-2 rounded-lg border border-vn-red/50 bg-vn-red/10 px-4 py-2 text-sm font-semibold text-vn-red transition-colors hover:bg-vn-red/20"
+                        className="inline-flex items-center gap-1.5 rounded border border-vn-red/50 bg-vn-red/20 px-3 py-1.5 text-xs font-bold text-vn-red transition-colors hover:bg-vn-red/30"
                       >
-                        Retry analysis
+                        Retry Analysis
                       </button>
                       <button
                         type="button"
                         onClick={() => switchMode("demo")}
-                        className="inline-flex items-center gap-2 rounded-lg border border-vn-border bg-white px-4 py-2 text-sm font-semibold text-vn-navy transition-colors hover:border-vn-primary/40"
+                        className="inline-flex items-center gap-1.5 rounded border border-vn-border bg-white px-3 py-1.5 text-xs font-bold text-vn-navy transition-colors hover:bg-vn-page"
                       >
-                        Switch to Demo Mode
+                        Switch to Offline Demo Mode
                       </button>
                     </>
                   )}
@@ -347,7 +361,7 @@ export default function DemoShell() {
 
             {/* Stage 3: Results */}
             {showResult && result && (
-              <section aria-live="polite" className="space-y-6">
+              <section aria-live="polite" className="space-y-5">
                 <RiskResult
                   result={result}
                   meta={analysis.meta}
@@ -402,28 +416,26 @@ export default function DemoShell() {
 
             {/* Empty state */}
             {!showResult && !analysis.isProcessing && !analysis.errorMessage && (
-              <div className="rounded-2xl border border-dashed border-vn-border bg-white px-6 py-12 text-center">
-                <FileSearch className="mx-auto h-7 w-7 text-vn-muted" aria-hidden="true" />
-                <p className="mt-3 text-sm font-medium text-vn-navy">
-                  Select a scenario and run the analysis
+              <div className="rounded-lg border border-dashed border-vn-border bg-white px-5 py-10 text-center font-mono">
+                <FileSearch className="mx-auto h-6 w-6 text-vn-muted" aria-hidden="true" />
+                <p className="mt-2 text-xs font-bold text-vn-navy">
+                  Select a Telemetry Scenario & Execute Pipeline
                 </p>
-                <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-vn-secondary">
-                  VAANISHIELD will stream the live signal board — voice authenticity and identity
-                  run in parallel — then build a probabilistic risk verdict with evidence and an
-                  adaptive verification workflow.
+                <p className="mx-auto mt-1 max-w-md font-sans text-xs leading-relaxed text-vn-secondary">
+                  VAANISHIELD will stream feature extractions across Layer 1 acoustic authenticity, Layer 2 ECAPA-TDNN speaker embeddings, and Layer 3 ASR scam intent into a 0-100 risk score.
                 </p>
               </div>
             )}
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-6 lg:sticky lg:top-20 lg:h-fit">
+          <aside className="space-y-5 lg:sticky lg:top-16 lg:h-fit">
             <section aria-labelledby="guard-heading">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h3 id="guard-heading" className="text-sm font-bold text-vn-navy">
-                  Live Guard
+              <div className="mb-2 flex items-center justify-between gap-2 font-mono">
+                <h3 id="guard-heading" className="text-xs font-bold uppercase tracking-wider text-vn-navy">
+                  Telemetry Monitor
                 </h3>
-                <LiveStatusTicker variant="live" label={guardState === "idle" ? "Monitoring" : guardState === "scanning" ? "Screening" : "Reporting"} />
+                <LiveStatusTicker variant="live" label={guardState === "idle" ? "Idle" : guardState === "scanning" ? "Ingesting" : "Report"} />
               </div>
               <LiveGuardWidget
                 state={guardState}
@@ -438,95 +450,87 @@ export default function DemoShell() {
 
             {/* Recommendation snapshot */}
             {showResult && result && (
-              <section className="rounded-2xl border border-vn-border bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
-                  Safety verdict
+              <section className="rounded-lg border border-vn-border bg-white p-4 font-mono shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                  System Security Response
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-vn-secondary">
+                <p className="mt-2 font-sans text-xs leading-relaxed text-vn-navy">
                   {result.risk.response}
                 </p>
                 {analysis.tier === "critical" && (
-                  <p className="mt-3 rounded-lg border border-vn-red/30 bg-vn-red/5 px-3 py-2.5 text-xs font-semibold leading-relaxed text-vn-red">
-                    Do not share OTPs, passwords, money, or confidential information until the
-                    caller is independently verified.
+                  <p className="mt-3 rounded border border-vn-red/40 bg-vn-red/10 px-2.5 py-2 text-[11px] font-bold leading-relaxed text-vn-red">
+                    CRITICAL: Do not transmit OTPs, passwords, or payments before out-of-band verification.
                   </p>
                 )}
               </section>
             )}
 
             {/* Advanced details drawer */}
-            <section className="card-surface rounded-2xl">
+            <section className="card-surface rounded-lg border border-vn-border bg-white">
               <button
                 type="button"
                 aria-expanded={advancedOpen}
                 onClick={() => setAdvancedOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-mono"
               >
-                <span className="inline-flex items-center gap-2 text-sm font-bold text-vn-navy">
-                  <SlidersHorizontal className="h-4 w-4 text-vn-primary" aria-hidden="true" />
-                  Advanced & settings
+                <span className="inline-flex items-center gap-2 text-xs font-bold text-vn-navy">
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-vn-primary" aria-hidden="true" />
+                  Mode & System Telemetry
                 </span>
                 <ChevronDown
-                  className={`h-4 w-4 text-vn-muted transition-transform ${advancedOpen ? "rotate-180" : ""}`}
+                  className={`h-3.5 w-3.5 text-vn-muted transition-transform ${advancedOpen ? "rotate-180" : ""}`}
                   aria-hidden="true"
                 />
               </button>
 
               {advancedOpen && (
-                <div className="space-y-5 border-t border-vn-border p-5">
+                <div className="space-y-4 border-t border-vn-border p-4 font-mono text-xs">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
-                      Run mode
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-vn-secondary">
-                      Demo is fully offline. API calls the FastAPI backend at{" "}
-                      <code className="rounded bg-vn-surface-blue px-1 py-0.5 font-mono text-[11px] text-vn-primary">
-                        /analyze/full
-                      </code>
-                      .
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                      Execution Mode
                     </p>
                     <div
                       role="tablist"
                       aria-label="Run mode"
-                      className="mt-3 grid grid-cols-2 gap-1 rounded-xl border border-vn-border bg-vn-page p-1"
+                      className="mt-2 grid grid-cols-2 gap-1 rounded border border-vn-border bg-vn-page p-1"
                     >
                       <button
                         type="button"
                         role="tab"
                         aria-selected={mode === "demo"}
                         onClick={() => switchMode("demo")}
-                        className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                        className={`rounded px-2.5 py-1.5 text-xs font-bold transition-colors ${
                           mode === "demo"
                             ? "bg-white text-vn-indigo shadow-sm"
                             : "text-vn-muted hover:text-vn-navy"
                         }`}
                       >
-                        Demo Mode
+                        Offline Demo
                       </button>
                       <button
                         type="button"
                         role="tab"
                         aria-selected={mode === "api"}
                         onClick={() => switchMode("api")}
-                        className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                        className={`rounded px-2.5 py-1.5 text-xs font-bold transition-colors ${
                           mode === "api"
                             ? "bg-white text-vn-blue shadow-sm"
                             : "text-vn-muted hover:text-vn-navy"
                         }`}
                       >
-                        API Mode
+                        Live API
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 text-xs">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
-                      System status
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                      FastAPI Backend Telemetry
                     </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-vn-secondary">Backend</span>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-vn-secondary">Health Endpoint</span>
                       <span
-                        className={`font-semibold ${
+                        className={`font-bold ${
                           analysis.checkingSystem
                             ? "text-vn-muted"
                             : analysis.systemOnline
@@ -537,22 +541,16 @@ export default function DemoShell() {
                         {analysis.checkingSystem
                           ? "Checking…"
                           : analysis.systemOnline
-                            ? "Online"
+                            ? "200 OK"
                             : "Offline"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-vn-secondary">Active mode</span>
-                      <span className="font-semibold text-vn-navy">
-                        {mode === "demo" ? "Demo simulations" : "Live API calls"}
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-vn-secondary">API Target</span>
+                      <span className="font-bold text-vn-navy">
+                        POST /analyze/full
                       </span>
                     </div>
-                    {mode === "api" && (
-                      <p className="mt-2 rounded-lg border border-vn-amber/30 bg-vn-amber/5 px-2.5 py-1.5 text-[11px] leading-relaxed text-vn-amber">
-                        API mode requires an audio file. Results depend on the backend running
-                        locally.
-                      </p>
-                    )}
                   </div>
 
                   <AnalysisHistory
@@ -560,12 +558,6 @@ export default function DemoShell() {
                     onReplay={analysis.replay}
                     onClear={analysis.clearRecent}
                   />
-
-                  <p className="rounded-xl border border-vn-border bg-vn-page px-3.5 py-3 text-[11px] leading-relaxed text-vn-muted">
-                    <strong className="text-vn-navy">Prototype notice.</strong> This console is a
-                    research demo. Risk scores are probabilistic indicators, and verification
-                    actions — SMS checks, telecom blocking, financial holds — are simulated only.
-                  </p>
                 </div>
               )}
             </section>
@@ -584,7 +576,7 @@ const STAGES = [
 
 function StageStepper({ current }: { current: number }) {
   return (
-    <nav aria-label="Console progress" className="flex items-center gap-2">
+    <nav aria-label="Console progress" className="flex items-center gap-2 font-mono">
       {STAGES.map((s, i) => {
         const idx = i + 1;
         const Icon = s.icon;
@@ -593,34 +585,34 @@ function StageStepper({ current }: { current: number }) {
         return (
           <div key={s.label} className="flex flex-1 items-center gap-2">
             <div
-              className={`flex flex-1 items-center gap-2.5 rounded-xl border px-3 py-2 transition-all ${
+              className={`flex flex-1 items-center gap-2 rounded border px-3 py-1.5 transition-all ${
                 isActive
-                  ? "border-vn-primary/40 bg-vn-primary/8"
+                  ? "border-vn-primary bg-vn-surface-blue"
                   : isDone
-                    ? "border-vn-green/30 bg-vn-green/5"
+                    ? "border-vn-green bg-vn-green/10"
                     : "border-vn-border bg-white"
               }`}
             >
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${
                   isActive
                     ? "bg-vn-primary text-white"
                     : isDone
-                      ? "bg-vn-green/15 text-vn-green"
+                      ? "bg-vn-green text-white"
                       : "bg-vn-page text-vn-muted"
                 }`}
               >
-                <Icon className="h-4 w-4" aria-hidden="true" />
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
-              <span className="hidden min-w-0 text-xs font-semibold sm:block">
-                <span className={`${isActive ? "text-vn-primary" : isDone ? "text-vn-green" : "text-vn-muted"}`}>
+              <span className="hidden min-w-0 text-xs font-bold sm:block">
+                <span className={isActive ? "text-vn-primary" : isDone ? "text-vn-green" : "text-vn-muted"}>
                   {isDone ? "✓ " : `${idx}. `}
                 </span>
                 <span className={isActive ? "text-vn-navy" : "text-vn-secondary"}>{s.label}</span>
               </span>
             </div>
             {idx < STAGES.length && (
-              <StepForward className="h-4 w-4 shrink-0 text-vn-border" aria-hidden="true" />
+              <StepForward className="h-3.5 w-3.5 shrink-0 text-vn-border" aria-hidden="true" />
             )}
           </div>
         );

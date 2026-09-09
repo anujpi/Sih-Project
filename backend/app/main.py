@@ -12,6 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import uuid
+import av
+import numpy as np
+import soundfile as sf
 
 from app.layers.layer1_synthetic_voice import SyntheticVoiceDetector
 from app.layers.layer2_speaker_verification import SpeakerVerifier
@@ -45,10 +48,53 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 
 def _save_upload(upload: UploadFile) -> str:
-    suffix = os.path.splitext(upload.filename or "audio.wav")[1] or ".wav"
-    rel_path = os.path.join(TMP_DIR, f"{uuid.uuid4().hex}{suffix}")
-    with open(rel_path, "wb") as f:
-        shutil.copyfileobj(upload.file, f)
+    """
+    Saves uploaded audio file and converts/normalizes it into a clean,
+    16kHz mono PCM_16 WAV file regardless of input container (WebM, Opus, OGG, MP3, etc.).
+    """
+    filename = f"{uuid.uuid4().hex}.wav"
+    rel_path = os.path.join(TMP_DIR, filename)
+    raw_path = os.path.join(TMP_DIR, f"raw_{filename}")
+
+    try:
+        with open(raw_path, "wb") as f:
+            shutil.copyfileobj(upload.file, f)
+
+        container = av.open(raw_path)
+        audio_stream = next((s for s in container.streams if s.type == "audio"), None)
+        if audio_stream is None:
+            raise ValueError("No audio stream found")
+
+        resampler = av.AudioResampler(format="flt", layout="mono", rate=16000)
+        frames = []
+        for frame in container.decode(audio_stream):
+            rf = resampler.resample(frame)
+            if rf:
+                for r in rf:
+                    frames.append(r.to_ndarray())
+
+        rf_flush = resampler.resample(None)
+        if rf_flush:
+            for r in rf_flush:
+                frames.append(r.to_ndarray())
+
+        container.close()
+
+        if not frames:
+            raise ValueError("Empty audio stream")
+
+        audio_data = np.concatenate(frames, axis=1).squeeze(0)
+        sf.write(rel_path, audio_data, 16000, subtype="PCM_16")
+    except Exception:
+        # Fallback: if PyAV conversion fails, copy raw file directly
+        shutil.copyfile(raw_path, rel_path)
+    finally:
+        if os.path.exists(raw_path):
+            try:
+                os.remove(raw_path)
+            except OSError:
+                pass
+
     return rel_path
 
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Clock3, RefreshCw, ShieldAlert } from "lucide-react";
+import { Clock3, RefreshCw, ShieldAlert } from "lucide-react";
 import RiskGauge from "@/components/risk-gauge";
 import { TierBadge } from "@/components/status-badge";
 import { AnalysisMeta, AnalysisResponse } from "@/lib/types";
@@ -17,33 +17,34 @@ function buildReasons(result: AnalysisResponse): string[] {
   const voice = normalizeScore(result.voice_authenticity.synthetic_probability);
   if (voice >= 50) {
     reasons.push(
-      `Voice authenticity layer flagged the audio as likely synthetic (${Math.round(voice)}%).`
+      `Layer 1 wav2vec2 acoustic model flagged synthetic speech features (${Math.round(voice)}% probability).`
     );
   } else {
-    reasons.push("Voice authenticity layer found no strong synthetic-voice indicator.");
+    reasons.push("Layer 1 acoustic analysis detected no synthetic speech anomalies.");
   }
 
   const identity = result.identity_verification;
   if (identity) {
     const sim = normalizeScore(identity.similarity_score);
+    const src = identity.source === "registry" ? "Voiceprint Registry" : "reference clip";
     reasons.push(
       identity.identity_match
-        ? `Identity check passed — the caller matches the claimed speaker (${Math.round(sim)}% similarity).`
-        : `Identity check failed — the caller does not match the claimed speaker (${Math.round(sim)}% similarity).`
+        ? `Layer 2 ECAPA-TDNN passed speaker match against ${src} (${Math.round(sim)}% similarity).`
+        : `Layer 2 ECAPA-TDNN flagged speaker mismatch against ${src} (${Math.round(sim)}% similarity).`
     );
   } else {
-    reasons.push("Identity verification was not performed — no reference voice was provided.");
+    reasons.push("Layer 2 speaker verification skipped — no claimed voiceprint or reference sample provided.");
   }
 
   const triggered = result.intent_analysis.triggered_intents;
   if (triggered.length > 0) {
     reasons.push(
-      `Transcript analysis detected ${triggered.length} risky intent pattern${
+      `Layer 3 ASR scam intent engine flagged ${triggered.length} risk pattern${
         triggered.length > 1 ? "s" : ""
       } (${triggered.join(", ")}).`
     );
   } else {
-    reasons.push("Transcript analysis found no scam-intent patterns.");
+    reasons.push("Layer 3 ASR scam intent engine found no high-risk conversational patterns.");
   }
 
   return reasons.slice(0, 3);
@@ -62,78 +63,68 @@ export default function RiskResult({
   return (
     <section
       aria-labelledby="risk-result-heading"
-      className="card-surface overflow-hidden"
+      className="card-surface rounded-lg border border-vn-border bg-white overflow-hidden shadow-sm"
     >
-      <div className="grid gap-0 lg:grid-cols-[320px_1fr]">
-        <div
-          className="flex flex-col items-center justify-center gap-2 border-b border-vn-border p-6 lg:border-b-0 lg:border-r"
-          style={{
-            background: `radial-gradient(120% 90% at 50% 0%, ${tierMeta.hex}14 0%, transparent 60%)`,
-          }}
-        >
+      <div className="grid gap-0 lg:grid-cols-[300px_1fr]">
+        <div className="flex flex-col items-center justify-center gap-2 border-b border-vn-border p-6 bg-vn-page lg:border-b-0 lg:border-r">
           <RiskGauge score={score} tier={tier} />
-          <p className="text-xs text-vn-muted">
-            Explanation: {meta?.scenarioLabel ?? "Analyzed interaction"}
+          <p className="font-mono text-[11px] text-vn-muted">
+            Profile: {meta?.scenarioLabel ?? "Call Telemetry"}
           </p>
         </div>
 
-        <div className="flex flex-col p-6">
+        <div className="flex flex-col p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <h3
               id="risk-result-heading"
-              className="text-xl font-bold tracking-tight text-vn-navy"
+              className="text-lg font-bold tracking-tight text-vn-navy"
             >
-              {meta?.scenarioLabel ?? "Risk assessment"}
+              {meta?.scenarioLabel ?? "Unified Risk Verdict"}
             </h3>
             <TierBadge tier={tier} />
             {meta?.isDemo && (
-              <span className="rounded-full border border-vn-primary/25 bg-vn-primary/8 px-2 py-0.5 text-[11px] font-medium text-vn-primary">
-                Demo Scenario
+              <span className="rounded border border-vn-border bg-vn-page px-2 py-0.5 font-mono text-[10px] font-bold text-vn-secondary">
+                Demo Mode
               </span>
             )}
           </div>
 
-          <p className="mt-3 text-base leading-relaxed text-vn-secondary">
+          <p className="mt-3 text-xs leading-relaxed text-vn-secondary sm:text-sm">
             {result.risk.response}
           </p>
 
           {tier === "critical" && (
             <div
               role="alert"
-              className="mt-4 rounded-xl border border-vn-red/40 bg-vn-red/10 p-4"
+              className="mt-3 rounded border border-vn-red/40 bg-vn-red/10 p-3"
             >
-              <p className="inline-flex items-center gap-2 text-sm font-bold text-vn-red">
+              <p className="inline-flex items-center gap-2 font-mono text-xs font-bold text-vn-red">
                 <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
-                Do not share OTPs, passwords, money, or confidential information until the
-                caller is independently verified.
+                MANDATORY WARN: Do not transmit OTPs, passwords, or financial transfers until caller identity is independently verified out-of-band.
               </p>
             </div>
           )}
 
-          <div className="mt-5 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
-              Main reasons
+          <div className="mt-4 space-y-2 border-t border-vn-border pt-4">
+            <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+              Primary Verdict Drivers
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5 font-mono text-xs text-vn-secondary">
               {reasons.map((reason, index) => (
-                <li key={index} className="flex gap-2 text-sm leading-relaxed text-vn-muted">
-                  <span
-                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: tierMeta.hex }}
-                    aria-hidden="true"
-                  />
+                <li key={index} className="flex gap-2 leading-relaxed">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-vn-navy" aria-hidden="true" />
                   {reason}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
-            <span className="inline-flex items-center gap-1.5 text-xs text-vn-muted">
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
+            <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-vn-muted">
               <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-              {meta?.timestamp ?? "Analysis"}
+              {meta?.timestamp ?? "Timestamp"}
               {meta?.claimedIdentity && meta.claimedIdentity !== "Not specified"
-                ? ` · claimed as ${meta.claimedIdentity}`
+                ? ` · Claimed: ${meta.claimedIdentity}`
                 : ""}
             </span>
 
@@ -141,28 +132,14 @@ export default function RiskResult({
               <button
                 type="button"
                 onClick={onAnalyzeAnother}
-                className="inline-flex items-center gap-2 rounded-lg border border-vn-border bg-white px-4 py-2 text-sm font-semibold text-vn-navy transition-colors hover:border-vn-cyan/40 hover:text-vn-cyan"
+                className="inline-flex items-center gap-1.5 rounded border border-vn-border bg-white px-3 py-1.5 font-mono text-xs font-bold text-vn-navy transition-colors hover:bg-vn-page"
               >
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                Analyze another interaction
+                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                Reset Pipeline
               </button>
-              {tierMeta.rank >= 2 && (
-                <span className="inline-flex items-center gap-1.5 rounded-lg border border-vn-amber/40 bg-vn-amber/10 px-3 py-2 text-xs font-semibold text-vn-amber">
-                  <ShieldAlert className="h-4 w-4" aria-hidden="true" />
-                  Verification advised
-                </span>
-              )}
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="border-t border-vn-border px-6 py-3 text-xs text-vn-muted">
-        <span className="inline-flex items-center gap-1.5">
-          <ArrowRight className="h-3.5 w-3.5 text-vn-cyan" aria-hidden="true" />
-          Treat this score as a probabilistic risk indicator — not ground truth.
-          Review the evidence cards below before acting.
-        </span>
       </div>
     </section>
   );

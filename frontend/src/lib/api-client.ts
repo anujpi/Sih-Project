@@ -83,7 +83,7 @@ export function friendlyApiError(err: unknown): string {
  * Missing or malformed fields are neutralized rather than crashing the UI.
  */
 export function sanitizeAnalysisResponse(
-  raw: Partial<AnalysisResponse> | null | undefined
+  raw: Partial<AnalysisResponse> & { identity_warning?: string } | null | undefined
 ): AnalysisResponse {
   const voice = raw?.voice_authenticity ?? null;
   const identity = raw?.identity_verification ?? null;
@@ -108,6 +108,9 @@ export function sanitizeAnalysisResponse(
       : {
           similarity_score: normalizeScore(identity.similarity_score, 0.5) / 100,
           identity_match: Boolean(identity.identity_match),
+          source: identity.source,
+          claimed_identity: identity.claimed_identity,
+          warning: identity.warning,
         };
 
   const flagsRaw = intent?.flags;
@@ -155,7 +158,7 @@ export function sanitizeAnalysisResponse(
     identity_verification: identityResult,
     intent_analysis: intentResult,
     risk: {
-      overall_risk: overall,
+      overall_risk: overall > 1 ? overall / 100 : overall,
       tier,
       response:
         typeof risk?.response === "string" && risk.response
@@ -163,6 +166,7 @@ export function sanitizeAnalysisResponse(
           : "No recommendation provided by the backend.",
       breakdown,
     },
+    identity_warning: raw?.identity_warning,
   };
 }
 
@@ -179,17 +183,75 @@ export async function checkHealth(): Promise<boolean> {
 }
 
 /**
- * POST audio (+ optional reference) to {base}/analyze/full as multipart
+ * Register a voice embedding once at POST /register-voice
+ */
+export async function registerVoice(
+  name: string,
+  audioFile: File
+): Promise<{ registered: string }> {
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("audio", audioFile);
+
+  const response = await fetch(`${API_BASE_URL}/register-voice`, {
+    method: "POST",
+    body: formData,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new ApiClientError("API_ERROR", `Failed to register voice (${response.status}).`);
+  }
+  return response.json() as Promise<{ registered: string }>;
+}
+
+/**
+ * GET /voices — list all registered voiceprint names
+ */
+export async function getVoices(): Promise<string[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/voices`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return [];
+    const json = (await response.json()) as { voices?: string[] };
+    return Array.isArray(json.voices) ? json.voices : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * DELETE /voices/{name} — delete a registered voiceprint
+ */
+export async function deleteVoice(name: string): Promise<{ deleted: string }> {
+  const response = await fetch(`${API_BASE_URL}/voices/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) {
+    throw new ApiClientError("API_ERROR", `Failed to delete voiceprint "${name}".`);
+  }
+  return response.json() as Promise<{ deleted: string }>;
+}
+
+/**
+ * POST audio (+ optional reference and claimed_identity) to {base}/analyze/full as multipart
  * form data. Throws ApiClientError with a machine-usable code.
  */
 export async function analyzeAudio(
   audioFile: File,
-  referenceAudioFile?: File | null
+  referenceAudioFile?: File | null,
+  claimedIdentity?: string | null
 ): Promise<AnalysisResponse> {
   const formData = new FormData();
   formData.append("audio", audioFile);
   if (referenceAudioFile) {
     formData.append("reference_audio", referenceAudioFile);
+  }
+  if (claimedIdentity && claimedIdentity !== "Not specified") {
+    formData.append("claimed_identity", claimedIdentity);
   }
 
   let response: Response;

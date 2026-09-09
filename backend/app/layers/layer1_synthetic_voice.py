@@ -44,12 +44,13 @@ class SyntheticVoiceDetector:
         self.id2label = self.model.config.id2label
 
     def _load_audio(self, path: str) -> torch.Tensor:
-        # soundfile (libsndfile) instead of torchaudio.load — avoids
-        # needing torchcodec + a separately-installed system FFmpeg,
-        # which is a pain on Windows. Handles wav/flac natively; for
-        # mp3/m4a convert to wav first (e.g. via VLC or ffmpeg CLI).
-        data, sr = sf.read(path, dtype="float32", always_2d=True)
-        waveform = torch.from_numpy(data.T)  # (channels, samples)
+        try:
+            data, sr = sf.read(path, dtype="float32", always_2d=True)
+            waveform = torch.from_numpy(data.T)  # (channels, samples)
+        except Exception:
+            waveform, sr = torchaudio.load(path)
+            if waveform.ndim == 1:
+                waveform = waveform.unsqueeze(0)
         if waveform.shape[0] > 1:
             waveform = waveform.mean(dim=0, keepdim=True)
         if sr != TARGET_SR:

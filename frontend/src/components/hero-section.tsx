@@ -1,87 +1,75 @@
 "use client";
 
-import { ArrowRight, Play, Layers } from "lucide-react";
+import { ArrowRight, Play, Shield, Terminal } from "lucide-react";
 import Link from "next/link";
 import LiveGuardWidget from "@/components/live-guard-widget";
 import Reveal from "@/components/reveal";
 
-const TRUST_LABELS = [
-  "Probabilistic analysis",
-  "Explainable evidence",
-  "Adaptive verification",
+const METRICS = [
+  { label: "Layer 1 Baseline", value: "wav2vec2-base (16 kHz)" },
+  { label: "Layer 2 Verification", value: "SpeechBrain ECAPA-TDNN" },
+  { label: "Layer 3 STT Engine", value: "faster-whisper" },
+  { label: "Layer 4 Risk Formula", value: "0.35 L1 + 0.25 L2 + 0.40 L3" },
 ];
 
 export default function HeroSection() {
   return (
     <section
       id="top"
-      className="relative isolate overflow-hidden pb-16 pt-24 sm:pb-24 sm:pt-32"
+      className="relative isolate border-b border-vn-border bg-vn-page pb-16 pt-20 sm:pb-20 sm:pt-28"
     >
-      {/* Background gradients */}
-      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div className="vn-grid-bg absolute inset-0 opacity-50" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(70% 50% at 80% 0%, rgba(0,167,199,0.06), transparent 60%), radial-gradient(60% 45% at 10% 20%, rgba(21,101,216,0.05), transparent 55%)",
-          }}
-        />
-      </div>
-
       <div className="vn-container grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8">
         {/* Copy */}
         <Reveal>
           <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-vn-primary/20 bg-vn-primary/8 px-3.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-vn-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-vn-primary vn-pulse-soft" aria-hidden="true" />
-              Real-time voice impersonation defense
-            </p>
+            <div className="inline-flex items-center gap-2 rounded-md border border-vn-border bg-white px-3 py-1 font-mono text-xs font-semibold uppercase tracking-wider text-vn-navy shadow-sm">
+              <Shield className="h-3.5 w-3.5 text-vn-primary" aria-hidden="true" />
+              <span>SIH26104 Security Architecture</span>
+            </div>
 
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-vn-navy sm:text-5xl lg:text-[3.2rem]">
-              Can you trust the voice
-              <br />
-              on the other end?
+            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-vn-navy sm:text-4xl lg:text-[2.8rem]">
+              Real-Time Voice Impersonation & Cloned-Audio Defense Matrix
             </h1>
 
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-vn-secondary sm:text-lg">
-              VAANISHIELD analyzes the voice, the claimed identity, and the conversation
-              context before a dangerous decision is made. It checks authenticity, identity,
-              intent, and context — with evidence you can actually read.
+            <p className="mt-4 text-sm leading-relaxed text-vn-secondary sm:text-base">
+              VAANISHIELD cross-examines incoming call audio across four parallel signal layers — acoustic synthetic voice detection, speaker voiceprint similarity, speech transcript intent, and a unified explainable risk engine — before critical decisions or financial actions are authorized.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
                 href="/demo"
-                className="inline-flex items-center gap-2 rounded-xl bg-vn-navy px-6 py-3 text-base font-bold text-white shadow-md transition-all hover:bg-vn-navy-deep hover:shadow-lg active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-md bg-vn-navy px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep active:scale-[0.98]"
               >
-                <Play className="h-4 w-4" aria-hidden="true" />
-                Run Interactive Demo
+                <Play className="h-3.5 w-3.5 text-vn-blue" aria-hidden="true" />
+                Launch Security Console
               </Link>
               <Link
                 href="/how-it-works"
-                className="inline-flex items-center gap-2 rounded-xl border border-vn-border bg-white px-6 py-3 text-base font-semibold text-vn-navy transition-colors hover:border-vn-primary/40 hover:text-vn-primary"
+                className="inline-flex items-center gap-2 rounded-md border border-vn-border bg-white px-5 py-2.5 text-xs font-bold text-vn-navy transition-colors hover:border-vn-secondary hover:bg-vn-page"
               >
-                <Layers className="h-4 w-4" aria-hidden="true" />
-                Explore the Four Layers
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <Terminal className="h-3.5 w-3.5 text-vn-secondary" aria-hidden="true" />
+                Pipeline Specification
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </div>
 
-            <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2">
-              {TRUST_LABELS.map((label) => (
-                <li key={label} className="flex items-center gap-1.5 text-xs font-medium text-vn-muted">
-                  <span className="h-1 w-1 rounded-full bg-vn-primary" aria-hidden="true" />
-                  {label}
-                </li>
+            {/* Architecture Metrics Table */}
+            <div className="mt-8 grid grid-cols-2 gap-2 border-t border-vn-border pt-5">
+              {METRICS.map((m) => (
+                <div key={m.label} className="rounded border border-vn-border bg-white p-2.5 font-mono">
+                  <span className="block text-[10px] uppercase tracking-wider text-vn-muted">{m.label}</span>
+                  <span className="mt-0.5 block text-xs font-semibold text-vn-navy">{m.value}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </Reveal>
 
-        {/* Hero illustration */}
+        {/* Hero telemetry panel */}
         <Reveal delay={120}>
-          <LiveGuardWidget state="idle" />
+          <div className="rounded-xl border border-vn-border bg-white p-4 shadow-sm">
+            <LiveGuardWidget state="idle" />
+          </div>
         </Reveal>
       </div>
     </section>

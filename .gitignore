@@ -8,6 +8,7 @@ venv/
 backend/models/*
 !backend/models/README.md
 backend/voiceprints/
+backend/.tmp_uploads/
 # OS / editor
 .DS_Store
 .vscode/

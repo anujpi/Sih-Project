@@ -11,11 +11,11 @@ const FEATURES = [
     bg: "bg-vn-cyan/10",
     solidBg: "bg-vn-cyan",
     border: "border-vn-cyan/40",
-    title: "Synthetic voice detection",
-    eyebrow: "Voice authenticity",
-    copy: "A fine-tuned wav2vec2 classifier listens for the acoustic fingerprints of AI-generated speech — even high-fidelity clones. It answers: does this voice sound machine-generated?",
+    title: "Layer 1: Acoustic Deepfake Classifier",
+    eyebrow: "Voice Authenticity",
+    copy: "Fine-tuned wav2vec2 sequence classifier listening for acoustic anomalies and phase artifacts characteristic of neural vocoders and voice conversion models.",
     detail:
-      "Audio is normalized to 16 kHz and scored by a wav2vec2 sequence classifier. A synthetic probability at or above 50% is labeled synthetic — the first red flag of a cloned identity.",
+      "Audio is resampled to 16 kHz mono. Acoustic feature frames are processed by wav2vec2 sequence layers. A synthetic probability at or above 50% flags synthetic generation.",
   },
   {
     icon: Fingerprint,
@@ -23,23 +23,23 @@ const FEATURES = [
     bg: "bg-vn-indigo/10",
     solidBg: "bg-vn-indigo",
     border: "border-vn-indigo/40",
-    title: "Speaker identity verification",
-    eyebrow: "Identity consistency",
-    copy: "An ECAPA-TDNN voiceprint model checks the caller against a trusted reference. A human impostor is caught too — not just synthetic audio.",
+    title: "Layer 2: ECAPA-TDNN Speaker Verification",
+    eyebrow: "Identity Consistency",
+    copy: "SpeechBrain ECAPA-TDNN neural voiceprint model extracts a 192-dimensional speaker embedding and evaluates cosine similarity against registered voiceprints.",
     detail:
-      "The caller's embedding is compared to a registered voiceprint. A low cosine similarity is a mismatch — evidence that a real human voice can still be an impersonation attack.",
+      "Speaker similarity below threshold signals an identity mismatch. Catches human impersonators (e.g. social engineering calls) as well as AI voice clones.",
   },
   {
     icon: MessageSquareText,
-    accent: "text-vn-violet",
-    bg: "bg-vn-violet/10",
-    solidBg: "bg-vn-violet",
-    border: "border-vn-violet/40",
-    title: "Speech-to-text + scam intent",
-    eyebrow: "Scam-intent analysis",
-    copy: "Conversations are transcribed with faster-whisper and scanned for the pressure signals scammers rely on: OTPs, urgent transfers, secrecy, authority claims.",
+    accent: "text-vn-blue",
+    bg: "bg-vn-blue/10",
+    solidBg: "bg-vn-blue",
+    border: "border-vn-blue/40",
+    title: "Layer 3: ASR + Scam Intent Classifier",
+    eyebrow: "Transcript & Context Analysis",
+    copy: "faster-whisper speech-to-text transcribes phone audio in real-time, scanning for 5 scam pressure indicators: OTPs, financial requests, urgency, authority, secrecy.",
     detail:
-      "The transcript is searched for risky terms — OTP, money, transfer, urgent, secret, authority. Each triggered pattern raises the intent risk, capped at 100%. Everything is explained, never hidden.",
+      "Evaluates transcript against pattern dictionaries. Each triggered indicator increments intent risk score (0.0 to 1.0) with explicit explanation for every flagged keyword.",
   },
   {
     icon: Scale,
@@ -47,11 +47,11 @@ const FEATURES = [
     bg: "bg-vn-amber/10",
     solidBg: "bg-vn-amber",
     border: "border-vn-amber/40",
-    title: "Explainable risk engine",
-    eyebrow: "Adaptive response",
-    copy: "The signals combine into one 0–100 impersonation risk score with a readable breakdown — and an adaptive response scaled to the threat.",
+    title: "Layer 4: Unified Impersonation Risk Engine",
+    eyebrow: "Explainable Risk Formula",
+    copy: "Integrates Layer 1, 2, and 3 signals into a single 0–100 interaction score: Risk = 0.35(L1) + 0.25(L2) + 0.40(L3), mapped to 4 actionable operational tiers.",
     detail:
-      "Voice authenticity, identity mismatch, and intent risk are weighted into one explainable tier: Low (proceed), Medium (caution), High (verify caller), Critical (block before acting).",
+      "Tiers scale from Low (no interruption), Medium (warning display), High (out-of-band verification recommended), to Critical (mandatory intercept before sensitive action).",
   },
 ];
 
@@ -59,8 +59,6 @@ export default function FeatureGrid() {
   const [active, setActive] = useState(0);
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
-  // Scroll-driven: as the block enters the viewport, walk the signal line
-  // through the layers so the active layer tracks the scroll position.
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -113,60 +111,45 @@ export default function FeatureGrid() {
   const FeatureIcon = feature.icon;
 
   return (
-    <section id="how-it-works" className="vn-section scroll-mt-24" ref={sectionRef}>
+    <section id="how-it-works" className="vn-section border-b border-vn-border bg-white scroll-mt-24" ref={sectionRef}>
       <div className="vn-container">
         <Reveal>
           <div className="mx-auto max-w-2xl text-center">
-            <p className="font-mono text-xs font-semibold uppercase tracking-widest text-vn-cyan">
-              Four intelligence layers
+            <p className="font-mono text-xs font-semibold uppercase tracking-wider text-vn-primary">
+              Multi-Layer Defense Matrix
             </p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-vn-text sm:text-4xl">
-              How VAANISHIELD protects you
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-vn-navy sm:text-3xl">
+              Four Interlocking Signal Analysis Layers
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-vn-muted">
-              No single model can defend a relationship. VAANISHIELD cross-checks the voice, the
-              claimed identity, and what the caller is asking for — then explains its verdict.
+            <p className="mt-3 text-xs leading-relaxed text-vn-secondary sm:text-sm">
+              Single binary classifiers fail against human impersonation and sophisticated voice clones. VAANISHIELD combines audio authenticity, speaker identity, and conversational intent into one deterministic risk formula.
             </p>
           </div>
         </Reveal>
 
-        <div className="mt-12 grid items-stretch gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-          {/* Left: vertical step sequence with a traveling signal line */}
-          <ul className="space-y-4" aria-label="Four intelligence layers">
+        <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+          {/* Left: layer list */}
+          <ul className="space-y-3" aria-label="Four intelligence layers">
             {FEATURES.map((feature, index) => {
               const Icon = feature.icon;
               const isActive = index === active;
               const isDone = index < active;
               return (
-                <li key={feature.title} className="flex items-stretch gap-5">
-                  {/* Node column: dot on top, connector filling below */}
-                  <div className="flex w-7 shrink-0 flex-col items-center" aria-hidden="true">
+                <li key={feature.title} className="flex items-stretch gap-4">
+                  <div className="flex w-6 shrink-0 flex-col items-center" aria-hidden="true">
                     <span
-                      className={`relative mt-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      className={`relative mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                         isActive
-                          ? "border-vn-cyan"
+                          ? "border-vn-primary bg-vn-primary text-white"
                           : isDone
-                            ? "border-vn-green/60 bg-vn-green/10"
-                            : "border-vn-border bg-vn-navy-2"
+                            ? "border-vn-green bg-vn-green text-white"
+                            : "border-vn-border bg-white"
                       }`}
                     >
-                      {isActive && (
-                        <>
-                          <span className="h-2.5 w-2.5 rounded-full bg-vn-cyan" />
-                          <span className="absolute inset-0 animate-ping rounded-full bg-vn-cyan/40" />
-                        </>
-                      )}
-                      {isDone && <span className="h-2 w-2 rounded-full bg-vn-green" />}
+                      <span className="font-mono text-[10px] font-bold">{index + 1}</span>
                     </span>
-                    {/* Connector segment to the next node */}
                     {index < FEATURES.length - 1 && (
-                      <div className="my-1 w-px flex-1 bg-vn-border">
-                        <div
-                          className={`w-px transition-all duration-500 ${
-                            isDone ? "h-full bg-vn-green/70" : "h-0"
-                          }`}
-                        />
-                      </div>
+                      <div className="my-1 w-px flex-1 bg-vn-border" />
                     )}
                   </div>
 
@@ -176,36 +159,24 @@ export default function FeatureGrid() {
                     onMouseEnter={() => setActive(index)}
                     onFocus={() => setActive(index)}
                     onClick={() => setActive(index)}
-                    className={`group relative flex-1 rounded-2xl border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-cyan sm:p-5 ${
+                    className={`group relative flex-1 rounded-lg border p-4 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-vn-primary ${
                       isActive
-                        ? `${feature.border} bg-vn-surface/80 shadow-xl shadow-black/30`
-                        : "border-transparent bg-vn-surface/30 hover:bg-vn-surface/50"
+                        ? "border-vn-primary bg-vn-surface-blue"
+                        : "border-vn-border bg-white hover:border-vn-secondary"
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                          isActive ? `${feature.bg} ${feature.accent}` : "bg-white/5 text-vn-muted"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-vn-border bg-white text-vn-navy">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                       </span>
-                      <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-vn-muted">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-vn-muted">
                         Layer 0{index + 1}
                       </span>
                     </span>
-                    <span
-                      className={`mt-2 block text-base font-bold transition-colors ${
-                        isActive ? "text-vn-text" : "text-vn-text/80"
-                      }`}
-                    >
+                    <span className="mt-2 block text-sm font-bold text-vn-navy">
                       {feature.title}
                     </span>
-                    <span
-                      className={`mt-1 block text-sm leading-relaxed transition-colors ${
-                        isActive ? "text-vn-secondary" : "text-vn-muted"
-                      }`}
-                    >
+                    <span className="mt-1 block text-xs leading-relaxed text-vn-secondary">
                       {feature.copy}
                     </span>
                   </button>
@@ -214,49 +185,42 @@ export default function FeatureGrid() {
             })}
           </ul>
 
-          {/* Right: active layer detail + pipeline state */}
+          {/* Right: layer technical specification */}
           <Reveal delay={120} className="h-full">
-            <div className="flex h-full min-h-[340px] flex-col justify-between overflow-hidden rounded-2xl border border-vn-border bg-vn-midnight/50 p-6 sm:p-8">
+            <div className="flex h-full min-h-[320px] flex-col justify-between rounded-lg border border-vn-border bg-vn-page p-5 sm:p-6">
               <div>
-                <span
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-widest ${feature.border} ${feature.accent} ${feature.bg}`}
-                >
-                  <FeatureIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1.5 rounded border border-vn-border bg-white px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-vn-navy">
+                  <FeatureIcon className="h-3.5 w-3.5 text-vn-primary" aria-hidden="true" />
                   {feature.eyebrow}
                 </span>
-                <h3 className="mt-4 text-2xl font-extrabold tracking-tight text-vn-text">
+                <h3 className="mt-3 text-lg font-bold text-vn-navy">
                   {feature.title}
                 </h3>
                 <p
                   key={active}
-                  className="mt-3 min-h-[96px] rounded-xl border border-vn-border bg-vn-navy-2/50 p-4 text-sm leading-relaxed text-vn-secondary vn-anim-rise"
+                  className="mt-3 rounded-md border border-vn-border bg-white p-4 font-mono text-xs leading-relaxed text-vn-secondary"
                 >
                   {feature.detail}
                 </p>
               </div>
 
-              {/* Pipeline checkpoint */}
-              <div
-                className="mt-6 space-y-1.5"
-                aria-live="polite"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-vn-muted">
-                  Pipeline checkpoint
+              <div className="mt-6 space-y-1.5 border-t border-vn-border pt-4">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                  Pipeline Stage Checkpoint
                 </p>
                 <div className="flex items-center gap-2">
                   {FEATURES.map((_, i) => (
                     <span
                       key={i}
-                      className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                        i < active ? "bg-vn-green" : i === active ? `${FEATURES[i].solidBg} vn-pulse-soft` : "bg-white/10"
+                      className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                        i <= active ? "bg-vn-primary" : "bg-vn-border"
                       }`}
                       aria-hidden="true"
                     />
                   ))}
                 </div>
-                <p className="text-xs text-vn-muted">
-                  Layer {active + 1} of {FEATURES.length} —{" "}
-                  <span className="font-semibold text-vn-text">{feature.title}</span>
+                <p className="font-mono text-[11px] text-vn-secondary">
+                  Layer {active + 1} of {FEATURES.length} — {feature.title}
                 </p>
               </div>
             </div>

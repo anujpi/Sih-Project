@@ -29,45 +29,35 @@ function statusMeta(status: PipelineStageStatus) {
       return {
         label: "Processing",
         icon: Loader2,
-        bar: "bg-vn-cyan",
-        barClass: "animate-pulse",
-        stepClass: "border-vn-cyan/60 text-vn-cyan bg-vn-cyan/10",
-        text: "text-vn-cyan",
+        stepClass: "border-vn-primary text-vn-primary bg-vn-surface-blue font-mono",
+        text: "text-vn-primary font-bold",
       };
     case "completed":
       return {
         label: "Completed",
         icon: Check,
-        bar: "bg-vn-green",
-        barClass: "",
-        stepClass: "border-vn-green/60 text-vn-green bg-vn-green/10",
-        text: "text-vn-green",
+        stepClass: "border-vn-green text-vn-green bg-vn-green/10 font-mono",
+        text: "text-vn-green font-bold",
       };
     case "skipped":
       return {
         label: "Skipped",
         icon: Minus,
-        bar: "bg-vn-muted/50",
-        barClass: "",
-        stepClass: "border-vn-muted/50 text-vn-muted bg-vn-page",
+        stepClass: "border-vn-border text-vn-muted bg-vn-page font-mono",
         text: "text-vn-muted",
       };
     case "error":
       return {
         label: "Error",
         icon: Minus,
-        bar: "bg-vn-red",
-        barClass: "",
-        stepClass: "border-vn-red/60 text-vn-red bg-vn-red/10",
-        text: "text-vn-red",
+        stepClass: "border-vn-red text-vn-red bg-vn-red/10 font-mono",
+        text: "text-vn-red font-bold",
       };
     default:
       return {
         label: "Queued",
         icon: CircleDot,
-        bar: "bg-vn-border",
-        barClass: "",
-        stepClass: "border-vn-border text-vn-muted bg-vn-page",
+        stepClass: "border-vn-border text-vn-muted bg-white font-mono",
         text: "text-vn-muted",
       };
   }
@@ -84,35 +74,35 @@ export default function AnalysisPipeline({ stages }: AnalysisPipelineProps) {
     <section
       aria-labelledby="pipeline-heading"
       aria-live="polite"
-      className="card-surface rounded-2xl p-5 sm:p-6"
+      className="card-surface rounded-lg border border-vn-border bg-white p-4 font-mono shadow-sm"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 border-b border-vn-border pb-3">
         <div>
-          <h3 id="pipeline-heading" className="text-base font-semibold text-vn-navy">
-            Analysis pipeline
+          <h3 id="pipeline-heading" className="text-xs font-bold uppercase tracking-wider text-vn-navy">
+            Sequential Pipeline Execution
           </h3>
-          <p className="mt-0.5 text-sm text-vn-muted">
-            Four intelligence layers run in sequence.
+          <p className="mt-0.5 font-sans text-xs text-vn-secondary">
+            4-stage evaluation sequence tracking signal feature extractions.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden items-center gap-1.5 font-mono text-xs font-bold text-vn-muted sm:inline-flex">
-            {progress}%
+          <span className="font-mono text-xs font-bold text-vn-navy">
+            {progress}% Complete
           </span>
           <div
             role="status"
             aria-live="polite"
-            className="hidden h-2.5 w-24 overflow-hidden rounded-full bg-vn-border sm:block"
+            className="hidden h-2 w-24 overflow-hidden rounded bg-vn-page border border-vn-border sm:block"
           >
             <div
-              className="h-full rounded-full bg-vn-cyan transition-all duration-500"
+              className="h-full bg-vn-navy transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
       </div>
 
-      <ol className="mt-6 hidden lg:flex lg:items-stretch lg:gap-0">
+      <ol className="mt-4 hidden lg:flex lg:items-stretch lg:gap-0">
         {stages.map((stage, index) => {
           const meta = statusMeta(stage.status);
           const Icon =
@@ -127,31 +117,31 @@ export default function AnalysisPipeline({ stages }: AnalysisPipelineProps) {
             <li key={stage.id} className="relative flex flex-1 flex-col items-center px-1 text-center">
               {index < stages.length - 1 && (
                 <span
-                  className={`absolute left-1/2 top-5 h-0.5 w-full -translate-y-1/2 ${
+                  className={`absolute left-1/2 top-4 h-0.5 w-full -translate-y-1/2 ${
                     stage.status === "completed" || stage.status === "skipped" || stage.status === "error"
-                      ? "bg-vn-green/50"
+                      ? "bg-vn-green"
                       : stage.status === "processing"
-                        ? "bg-vn-cyan/40"
+                        ? "bg-vn-primary"
                         : "bg-vn-border"
                   }`}
                   aria-hidden="true"
                 />
               )}
               <span
-                className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${meta.stepClass}`}
+                className={`relative z-10 flex h-8 w-8 items-center justify-center rounded border ${meta.stepClass}`}
               >
                 <Icon
-                  className={`h-5 w-5 ${stage.status === "processing" ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${stage.status === "processing" ? "animate-spin" : ""}`}
                   aria-hidden="true"
                 />
               </span>
-              <span className="mt-2 block text-[11px] font-semibold uppercase tracking-wider text-vn-muted">
-                0{index + 1}
+              <span className="mt-1.5 block text-[10px] font-bold text-vn-muted">
+                STAGE 0{index + 1}
               </span>
-              <span className={`mt-0.5 block text-xs font-bold ${meta.text}`}>
+              <span className={`block text-xs ${meta.text}`}>
                 {meta.label}
               </span>
-              <span className="mt-1 block min-h-[30px] max-w-[160px] text-[11px] leading-snug text-vn-muted">
+              <span className="mt-0.5 block min-h-[28px] max-w-[150px] font-sans text-[11px] leading-tight text-vn-secondary">
                 {stage.statusText ?? (stage.status === "waiting" ? "Queued" : "…")}
               </span>
             </li>
@@ -159,7 +149,7 @@ export default function AnalysisPipeline({ stages }: AnalysisPipelineProps) {
         })}
       </ol>
 
-      <ol className="mt-5 space-y-3 lg:hidden">
+      <ol className="mt-4 space-y-2 lg:hidden font-sans">
         {stages.map((stage, index) => {
           const meta = statusMeta(stage.status);
           const Icon =
@@ -174,55 +164,27 @@ export default function AnalysisPipeline({ stages }: AnalysisPipelineProps) {
             <li
               key={stage.id}
               aria-current={stage.status === "processing" ? "step" : undefined}
-              className="flex flex-col gap-2.5 rounded-xl border border-vn-border bg-white p-3.5 sm:flex-row sm:items-center sm:gap-4"
+              className="flex items-center justify-between gap-3 rounded border border-vn-border bg-white p-3 font-mono text-xs"
             >
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors ${meta.stepClass}`}
-              >
-                <Icon
-                  className={`h-5 w-5 ${stage.status === "processing" ? "animate-spin" : ""}`}
-                  aria-hidden="true"
-                />
-              </span>
-
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-sm font-semibold text-vn-navy">
-                    <span className="mr-2 font-mono text-xs text-vn-muted">0{index + 1}</span>
-                    {stage.label}
-                  </span>
-                  <span className={`text-[11px] font-medium ${meta.text}`}>
-                    · {meta.label}
-                  </span>
-                </div>
-                <p className="mt-0.5 truncate text-xs text-vn-muted">
-                  {stage.statusText ?? (stage.status === "waiting" ? "Queued" : "…")}
-                </p>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-vn-border">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      stage.status === "completed"
-                        ? "w-full"
-                        : stage.status === "processing"
-                          ? "w-2/3 vn-shimmer"
-                          : "w-0"
-                    } ${meta.bar}`}
+              <div className="flex items-center gap-3">
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded border ${meta.stepClass}`}
+                >
+                  <Icon
+                    className={`h-3.5 w-3.5 ${stage.status === "processing" ? "animate-spin" : ""}`}
+                    aria-hidden="true"
                   />
+                </span>
+                <div>
+                  <span className="font-bold text-vn-navy">
+                    0{index + 1}. {stage.label}
+                  </span>
+                  <p className="font-sans text-[11px] text-vn-muted">
+                    {stage.statusText ?? (stage.status === "waiting" ? "Queued" : "…")}
+                  </p>
                 </div>
               </div>
-
-              <span
-                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                  stage.status === "completed"
-                    ? "bg-vn-green"
-                    : stage.status === "processing"
-                      ? "bg-vn-cyan animate-pulse"
-                      : stage.status === "error"
-                        ? "bg-vn-red"
-                        : "bg-vn-border"
-                }`}
-                aria-hidden="true"
-              />
+              <span className={`text-[10px] font-bold ${meta.text}`}>{meta.label}</span>
             </li>
           );
         })}

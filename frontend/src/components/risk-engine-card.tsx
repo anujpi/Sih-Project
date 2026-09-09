@@ -25,47 +25,47 @@ export default function RiskEngineCard({ result }: { result: AnalysisResponse })
   return (
     <EvidenceCard
       id="unified-risk-card"
-      title="Unified risk engine"
+      title="Unified Risk Engine (Layer 4)"
       accent="amber"
-      icon={<Scale className="h-5 w-5" aria-hidden="true" />}
-      statusLabel={`Overall: ${risk.tier} risk`}
+      icon={<Scale className="h-5 w-5 text-vn-amber" aria-hidden="true" />}
+      statusLabel={`Tier: ${risk.tier.toUpperCase()}`}
       statusVariant="processing"
       summary={
-        <div className="space-y-4">
-          <div className="flex items-end justify-between gap-3">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-widest text-vn-muted">
-                Focused score
+        <div className="space-y-4 font-mono">
+          <div className="flex items-end justify-between gap-3 border-b border-vn-border pb-3">
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+                Calculated Interaction Risk Score
               </p>
               <p
-                className="font-mono text-4xl font-bold tabular-nums"
+                className="text-3xl font-bold tabular-nums"
                 style={{ color: tierMeta.hex }}
               >
                 {Math.round(overall)}
-                <span className="text-base font-medium text-vn-muted">/100</span>
+                <span className="text-xs font-normal text-vn-muted"> / 100</span>
               </p>
             </div>
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${tierMeta.badgeClass}`}
+              className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs font-bold ${tierMeta.badgeClass}`}
             >
               <span className={`h-1.5 w-1.5 rounded-full ${tierMeta.dotClass}`} aria-hidden="true" />
-              {risk.tier}
+              {risk.tier.toUpperCase()} TIER
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-vn-muted">
-              Contribution
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-vn-muted">
+              Weighted Component Risk Contributions
             </p>
             {[
-              { label: "Voice authenticity risk", value: voiceRisk, color: "#2F80ED" },
-              { label: "Identity mismatch risk", value: identityRisk, color: "#5B5FEF" },
-              { label: "Intent risk", value: intentRisk, color: "#5B5FEF" },
+              { label: "Layer 1 Voice Authenticity (35% Weight)", value: voiceRisk, color: "#0284C7" },
+              { label: "Layer 2 Identity Mismatch (25% Weight)", value: identityRisk, color: "#4F46E5" },
+              { label: "Layer 3 Scam Intent Risk (40% Weight)", value: intentRisk, color: "#2563EB" },
             ].map((row) => (
               <div key={row.label} className="space-y-1">
                 <KeyValue
                   label={row.label}
-                  value={row.value > 0 ? `${Math.round(row.value)}%` : "n/a"}
+                  value={row.value > 0 ? `${Math.round(row.value)}%` : "N/A (Skipped)"}
                   mono
                 />
                 <MeterBar
@@ -77,15 +77,13 @@ export default function RiskEngineCard({ result }: { result: AnalysisResponse })
             ))}
           </div>
 
-          <p className="rounded-lg border border-vn-border bg-white px-3 py-2.5 text-xs leading-relaxed text-vn-muted">
+          <p className="rounded border border-vn-border bg-vn-page p-3 text-xs leading-relaxed text-vn-navy font-sans">
             {risk.response}
           </p>
         </div>
       }
-      explanationTitle="How was this score calculated?"
-      explanation={`The engine combines three signals: voice authenticity (35% weight), identity mismatch (25%), and intent risk (40%), then caps the weighted sum at 100% and maps it to a tier — Low, Medium, High, or Critical. When identity verification is skipped, its weight is redistributed across the layers that actually ran. The result is a probabilistic risk indicator, not a guarantee: overall ${formatScore(
-        risk.overall_risk
-      )} falls in the ${risk.tier} tier. These weights are a prototype starting point, not a validated production model.`}
+      explanationTitle="Mathematical Risk Weighting Formula"
+      explanation={`The Layer 4 risk engine evaluates the deterministic formula: Risk = 0.35 × Voice_Risk + 0.25 × Identity_Mismatch_Risk + 0.40 × Intent_Risk. Scores (0-100) map to 4 response tiers: Low (<30), Medium (30-54), High (55-79), and Critical (80-100). If Layer 2 is omitted, weights are normalized over active layers.`}
     />
   );
 }

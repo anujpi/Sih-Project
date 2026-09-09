@@ -151,30 +151,57 @@ const TERM_KIND_PATTERNS: Array<{ kind: RiskTermKind; pattern: RegExp }> = [
   { kind: "authority", pattern: /\b(officer|police|court|vigil|bank manager|rbi|income tax|official|investigation)\b/i },
 ];
 
+export interface MatchRange {
+  start: number;
+  end: number;
+  kind: RiskTermKind;
+}
+
 export function highlightRiskTerms(text: string): TranscriptMark[] {
   if (!text) return [{ text: "", kind: null }];
-  const marks: TranscriptMark[] = [];
+
+  const rawMatches: MatchRange[] = [];
   for (const { kind, pattern } of TERM_KIND_PATTERNS) {
-    pattern.lastIndex = 0;
+    const regex = new RegExp(pattern.source, "gi");
     let match: RegExpExecArray | null;
-    while ((match = pattern.exec(text)) !== null) {
-      const start = match.index;
-      const end = start + match[0].length;
-      marks.push({ text: text.slice(start, end), kind });
-      if (match[0].length === 0) pattern.lastIndex += 1;
+    while ((match = regex.exec(text)) !== null) {
+      if (match[0].length === 0) {
+        regex.lastIndex += 1;
+        continue;
+      }
+      rawMatches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        kind,
+      });
     }
   }
-  if (marks.length === 0) return [{ text, kind: null }];
-  marks.sort((a, b) => text.indexOf(a.text) - text.indexOf(b.text));
-  const merged: TranscriptMark[] = [];
+
+  if (rawMatches.length === 0) return [{ text, kind: null }];
+
+  rawMatches.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+
+  const validMatches: MatchRange[] = [];
+  let lastEnd = 0;
+  for (const m of rawMatches) {
+    if (m.start >= lastEnd) {
+      validMatches.push(m);
+      lastEnd = m.end;
+    }
+  }
+
+  const result: TranscriptMark[] = [];
   let cursor = 0;
-  for (const mark of marks) {
-    if (cursor < text.indexOf(mark.text)) {
-      merged.push({ text: text.slice(cursor, text.indexOf(mark.text)), kind: null });
+  for (const m of validMatches) {
+    if (m.start > cursor) {
+      result.push({ text: text.slice(cursor, m.start), kind: null });
     }
-    merged.push(mark);
-    cursor = text.indexOf(mark.text) + mark.text.length;
+    result.push({ text: text.slice(m.start, m.end), kind: m.kind });
+    cursor = m.end;
   }
-  if (cursor < text.length) merged.push({ text: text.slice(cursor), kind: null });
-  return merged;
+  if (cursor < text.length) {
+    result.push({ text: text.slice(cursor), kind: null });
+  }
+
+  return result;
 }

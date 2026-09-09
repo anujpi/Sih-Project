@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* === Light theme palette === */
-  --vn-page: #F5F8FC;
+  /* === SOC Theme Palette === */
+  --vn-page: #F8FAFC;
   --vn-surface: #FFFFFF;
-  --vn-surface-blue: #EEF6FF;
-  --vn-surface-blue-gray: #E7EFF8;
+  --vn-surface-blue: #F1F5F9;
+  --vn-surface-blue-gray: #E2E8F0;
 
-  --vn-navy: #102A43;
-  --vn-navy-deep: #16324F;
-  --vn-text: #16324F;
-  --vn-secondary: #486581;
-  --vn-muted: #829AB1;
+  --vn-navy: #0F172A;
+  --vn-navy-deep: #020617;
+  --vn-text: #0F172A;
+  --vn-secondary: #334155;
+  --vn-muted: #64748B;
 
-  --vn-border: #D9E2EC;
-  --vn-border-light: #E7EFF8;
+  --vn-border: #CBD5E1;
+  --vn-border-light: #E2E8F0;
 
-  --vn-primary: #1565D8;
-  --vn-blue: #2F80ED;
-  --vn-cyan: #00A7C7;
-  --vn-indigo: #5B5FEF;
+  --vn-primary: #1E40AF;
+  --vn-blue: #2563EB;
+  --vn-cyan: #0284C7;
+  --vn-indigo: #4F46E5;
 
-  --vn-green: #159A6B;
+  --vn-green: #059669;
   --vn-amber: #D97706;
-  --vn-orange: #EA6A00;
-  --vn-red: #D92D4F;
+  --vn-orange: #EA580C;
+  --vn-red: #DC2626;
 
   /* Layout tokens */
   --content-max-width: 1280px;
@@ -32,10 +32,10 @@
   --content-padding-tablet: 24px;
   --content-padding-mobile: 16px;
 
-  /* Visual tokens */
-  --radius-card: 20px;
-  --radius-small: 12px;
-  --control-height: 48px;
+  /* Visual tokens — crisp, technical, SOC-grade */
+  --radius-card: 14px;
+  --radius-small: 8px;
+  --control-height: 44px;
 
   /* Spacing scale (multiples of 8px) */
   --space-1: 4px;
@@ -50,9 +50,9 @@
   --space-10: 96px;
 
   /* Section vertical padding: 80/56/40 */
-  --section-pad-desktop: 80px;
-  --section-pad-tablet: 56px;
-  --section-pad-mobile: 40px;
+  --section-pad-desktop: 72px;
+  --section-pad-tablet: 48px;
+  --section-pad-mobile: 36px;
 
   /* Grid gap: 24 desktop / 16 mobile */
   --grid-gap: 16px;
@@ -103,8 +103,8 @@ body {
 }
 
 ::selection {
-  background-color: rgba(21, 101, 216, 0.18);
-  color: #102A43;
+  background-color: rgba(30, 64, 175, 0.15);
+  color: #0F172A;
 }
 
 *:focus-visible {
@@ -112,14 +112,12 @@ body {
   outline-offset: 2px;
 }
 
-/* Shared card surface */
+/* Shared SOC card surface */
 .card-surface {
   background: var(--vn-surface);
   border: 1px solid var(--vn-border);
   border-radius: var(--radius-card);
-  box-shadow:
-    0 1px 3px rgba(16, 42, 67, 0.06),
-    0 4px 12px rgba(16, 42, 67, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 /* Soft elevated card */
@@ -127,15 +125,14 @@ body {
   background: var(--vn-surface);
   border: 1px solid var(--vn-border);
   border-radius: var(--radius-card);
-  box-shadow:
-    0 4px 16px rgba(16, 42, 67, 0.08),
-    0 1px 3px rgba(16, 42, 67, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 body {
   background-image:
-    radial-gradient(1200px 600px at 20% -5%, rgba(21, 101, 216, 0.04), transparent 60%),
-    radial-gradient(900px 500px at 90% 0%, rgba(0, 167, 199, 0.03), transparent 55%);
+    linear-gradient(rgba(203, 213, 225, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(203, 213, 225, 0.25) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 /*

@@ -9,28 +9,28 @@ export default function VoiceAuthenticityCard({ result }: { result: AnalysisResp
   const voice = result.voice_authenticity;
   const prob = normalizeScore(voice.synthetic_probability);
   const isSynthetic = voice.label === "synthetic" || prob >= 50;
-  const color = isSynthetic ? "#D92D4F" : "#159A6B";
-  const statusLabel = isSynthetic ? "Synthetic voice detected" : "Bonafide signal";
+  const color = isSynthetic ? "#DC2626" : "#059669";
+  const statusLabel = isSynthetic ? "Synthetic Voice Detected" : "Bonafide Signal";
   const statusVariant = isSynthetic ? "processing" : "ok";
   const LabelIcon = isSynthetic ? Bot : User;
 
   return (
     <EvidenceCard
       id="voice-authenticity-card"
-      title="Voice authenticity"
+      title="Acoustic Voice Authenticity"
       accent="cyan"
-      icon={<AudioLines className="h-5 w-5" aria-hidden="true" />}
+      icon={<AudioLines className="h-5 w-5 text-vn-cyan" aria-hidden="true" />}
       statusLabel={statusLabel}
       statusVariant={statusVariant}
       summary={
-        <div className="space-y-3">
+        <div className="space-y-3 font-mono">
           <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-xs text-vn-muted">
-              <LabelIcon className="h-4 w-4" aria-hidden="true" />
-              {isSynthetic ? "Synthetic" : "Bonafide"}
+            <span className="flex items-center gap-2 text-xs font-semibold text-vn-secondary">
+              <LabelIcon className="h-4 w-4" style={{ color }} aria-hidden="true" />
+              {isSynthetic ? "Synthetic VOC Artifacts" : "Bonafide Human Signal"}
             </span>
             <span
-              className="font-mono text-2xl font-bold tabular-nums"
+              className="text-2xl font-bold tabular-nums"
               style={{ color }}
             >
               {formatScore(voice.synthetic_probability)}
@@ -38,13 +38,14 @@ export default function VoiceAuthenticityCard({ result }: { result: AnalysisResp
           </div>
           <MeterBar value={prob} color={color} />
           <KeyValue
-            label="Model status"
-            value={voice.model_finetuned ? "Fine-tuned" : "Testing fallback"}
+            label="wav2vec2-base Status"
+            value={voice.model_finetuned ? "Fine-Tuned Checkpoint" : "Base Untrained Fallback"}
+            mono
           />
         </div>
       }
-      explanationTitle="How was this layer scored?"
-      explanation="Layer 1 runs a wav2vec2 classifier over 16 kHz acoustic features. A synthetic probability at or above 50% is labeled synthetic. The model was fine-tuned on in-the-wild deepfake data; when the tuning checkpoint is missing it falls back to an untrained base model, which the system reports honestly as &ldquo;testing fallback&rdquo;."
+      explanationTitle="Acoustic Feature Extraction Method"
+      explanation="Layer 1 resamples audio to 16 kHz mono and evaluates acoustic frame representations through wav2vec2 transformer layers. A calculated synthetic probability threshold ≥ 50% triggers a synthetic voice anomaly classification."
     />
   );
 }

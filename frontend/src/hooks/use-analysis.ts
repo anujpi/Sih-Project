@@ -146,6 +146,7 @@ export function useAnalysis() {
     analysisState: "idle",
   });
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const intervalsRef = useRef<ReturnType<typeof setInterval>[]>([]);
   const retryStateRef = useRef<AnalysisInputState | null>(null);
 
   const updateStage = useCallback((id: string, patchSet: Partial<PipelineStage>) => {
@@ -197,6 +198,7 @@ export function useAnalysis() {
   useEffect(() => {
     return () => {
       timersRef.current.forEach((t) => clearTimeout(t));
+      intervalsRef.current.forEach((t) => clearInterval(t));
     };
   }, []);
 
@@ -207,6 +209,8 @@ export function useAnalysis() {
   const resetPipeline = useCallback(() => {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
+    intervalsRef.current.forEach((t) => clearInterval(t));
+    intervalsRef.current = [];
     setState((prev) => ({
       ...prev,
       stages: initialStages(),
@@ -278,8 +282,8 @@ export function useAnalysis() {
         { at: SCIENCE(events, 0, 2), state: "voice_processing" },
         { at: SCIENCE(events, 0, 5), state: "identity_processing" },
         { at: SCIENCE(events, 0, 7), state: "transcript_updating" },
-        { at: SCIENCE(events, 0.3 * events.length + 2), state: "intent_processing" },
-        { at: SCIENCE(events, 0.7 * events.length), state: "risk_recalculating" },
+        { at: SCIENCE(events, Math.floor(0.3 * events.length), 2), state: "intent_processing" },
+        { at: SCIENCE(events, Math.floor(0.7 * events.length)), state: "risk_recalculating" },
       ];
       stageEvents.forEach((se) => {
         schedule(() => setAnalysisState(se.state), se.at);
@@ -368,14 +372,28 @@ export function useAnalysis() {
             statusText: step.statusText,
           });
           startedIdx += 1;
-          if (startedIdx >= PIPELINE_STEPS.length) clearInterval(startTick);
+          if (startedIdx >= PIPELINE_STEPS.length) {
+            clearInterval(startTick);
+            intervalsRef.current = intervalsRef.current.filter((t) => t !== startTick);
+          }
         }
       }, 800);
-      timersRef.current.push(setTimeout(() => clearInterval(startTick), 4000));
+      intervalsRef.current.push(startTick);
+      timersRef.current.push(setTimeout(() => {
+        clearInterval(startTick);
+        intervalsRef.current = intervalsRef.current.filter((t) => t !== startTick);
+      }, 4000));
 
       try {
         pushTimeline("Sending audio to VAANISHIELD API", undefined, "info");
-        const value = await analyzeAudio(input.audioFile!, input.referenceAudioFile);
+        const value = await analyzeAudio(
+          input.audioFile!,
+          input.referenceAudioFile,
+          input.claimedIdentity
+        );
+        if (value.identity_warning) {
+          pushTimeline(value.identity_warning, "identity", "warning");
+        }
         PIPELINE_STEPS.forEach((def, index) => {
           schedule(
             () => {
@@ -406,13 +424,18 @@ export function useAnalysis() {
           retryStateRef.current = null;
         }, PIPELINE_STEPS.length * 220 + 250);
       } catch (err) {
+        clearInterval(startTick);
+        intervalsRef.current = intervalsRef.current.filter((t) => t !== startTick);
         setState((prev) => ({
           ...prev,
           isProcessing: false,
           errorMessage:
             err instanceof ApiClientError ? friendlyApiError(err) : friendlyApiError(err),
           canRetry: true,
-          stages: prev.stages.map((s) => ({ ...s, status: "error" })),
+          stages: prev.stages.map((s) => ({
+            ...s,
+            status: s.status === "processing" || s.status === "waiting" ? "error" : s.status,
+          })),
           analysisState: "error",
         }));
         pushTimeline("Analysis failed — unable to screen the call", "risk", "warning");
@@ -503,10 +526,13 @@ export function useAnalysis() {
 function SCIENCE(source: unknown, start: number, count?: number): number {
   let total = 0;
   if (Array.isArray(source)) {
-    const end = count !== undefined ? start + count : source.length;
-    for (let i = start; i < end && i < source.length; i++) {
-      const ev = source[i] as { delayMs?: number };
-      total += ev.delayMs ?? 0;
+    const startIndex = Math.max(0, Math.floor(start));
+    const end = count !== undefined ? startIndex + Math.floor(count) : source.length;
+    for (let i = startIndex; i < end && i < source.length; i++) {
+      const ev = source[i] as { delayMs?: number } | undefined;
+      if (ev) {
+        total += ev.delayMs ?? 0;
+      }
     }
   }
   return total;

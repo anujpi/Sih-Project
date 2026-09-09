@@ -243,31 +243,17 @@ export default function LiveGuardWidget({
         </div>
       </div>
 
-      {/* Core: scan ring + shield + risk score */}
+      {/* Core: telemetry gauge + risk score */}
       <div
         className="relative mx-auto mt-2 w-[min(66vw,248px)]"
         style={{ "--ring-c": `${RING_C}` } as CSSProperties}
       >
         <div className="relative aspect-square w-full">
-          {/* Background circle */}
-          <div aria-hidden="true" className="absolute inset-0 rounded-full bg-white border border-vn-border shadow-sm" />
+          {/* Background container */}
+          <div aria-hidden="true" className="absolute inset-0 rounded-full bg-white border border-vn-border" />
 
-          {/* Radar sweep while scanning */}
-          {isScanning && (
-            <div
-              aria-hidden="true"
-              className="vn-sweep-slow absolute -inset-[6%] rounded-full"
-              style={{ background: `conic-gradient(from 0deg, ${color}22, transparent 80deg, transparent 320deg, ${color}0A 360deg)` }}
-            />
-          )}
-
-          {/* Static base ring + rotating dashed scan ring */}
-          <div aria-hidden="true" className="absolute inset-0 rounded-full" style={{ border: `1px solid ${color}18` }} />
-          <div
-            aria-hidden="true"
-            className={`absolute inset-0 rounded-full ${isScanning && !lockHeld ? "vn-spin-slow" : ""}`}
-            style={{ border: `1.5px dashed ${lockHeld ? color : `${color}44`}` }}
-          />
+          {/* Static base ring */}
+          <div aria-hidden="true" className="absolute inset-0 rounded-full" style={{ border: `1px solid ${color}33` }} />
 
           {/* Progress ring */}
           <svg
@@ -276,7 +262,7 @@ export default function LiveGuardWidget({
             aria-hidden="true"
             fill="none"
           >
-            <circle cx="60" cy="60" r="54" stroke="#D9E2EC" strokeWidth="3" />
+            <circle cx="60" cy="60" r="54" stroke="#E2E8F0" strokeWidth="3" />
             <circle
               cx="60"
               cy="60"
@@ -294,36 +280,17 @@ export default function LiveGuardWidget({
             />
           </svg>
 
-          {/* Waveform entering from the left */}
-          <div
-            aria-hidden="true"
-            className="absolute left-1 top-1/2 flex -translate-y-1/2 items-end gap-[3px]"
-          >
-            {[4, 7, 6, 9, 6, 8].map((h, i) => (
-              <span
-                key={i}
-                className={`block w-[3px] rounded-full ${isScanning ? "vn-wave-bar-active" : "vn-wave-bar"}`}
-                style={{
-                  height: `${h * 3}px`,
-                  animationDelay: `${i * 0.13}s`,
-                  background: `${color}aa`,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Shield (breathing glow) */}
-          <div aria-hidden="true" className="vn-breathe pointer-events-none absolute inset-0 grid place-items-center">
+          {/* Shield contour */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 grid place-items-center">
             <svg
-              className="h-[56%] w-[56%]"
+              className="h-[54%] w-[54%]"
               viewBox="0 0 24 24"
-              style={{ filter: `drop-shadow(0 0 12px ${color}33)` }}
             >
               <path
                 d="M12 2l8 3v6c0 5-3.3 8.6-8 11-4.7-2.4-8-6-8-11V5l8-3z"
-                fill={`${color}18`}
+                fill={`${color}0D`}
                 stroke={color}
-                strokeWidth="1.3"
+                strokeWidth="1.5"
                 strokeLinejoin="round"
               />
             </svg>
@@ -332,21 +299,21 @@ export default function LiveGuardWidget({
           {/* Risk score inside the shield */}
           <div className="pointer-events-none absolute inset-0 grid place-items-center">
             <div className="text-center">
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em]" style={{ color }}>
-                {isScanning ? "Scanning" : "Risk"}
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color }}>
+                {isScanning ? "Analyzing" : "Risk Verdict"}
               </p>
               <p className="mt-0.5 font-mono text-[2.1rem] font-bold leading-none tabular-nums sm:text-[2.4rem]" style={{ color }}>
                 {hasScore ? score : isScanning ? "..." : "--"}
               </p>
-              <p className="mt-1.5 flex items-center justify-center gap-1" style={{ color }}>
+              <p className="mt-1 flex items-center justify-center gap-1" style={{ color }}>
                 {state === "low" ? (
-                  <CheckCircle2 className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 ) : state === "critical" ? (
-                  <ShieldAlert className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                  <ShieldAlert className="h-4 w-4" aria-hidden="true" />
                 ) : state === "medium" || state === "high" ? (
-                  <AlertTriangle className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                  <AlertTriangle className="h-4 w-4" aria-hidden="true" />
                 ) : state === "error" ? (
-                  <XCircle className="vn-pop-in h-4 w-4" aria-hidden="true" />
+                  <XCircle className="h-4 w-4" aria-hidden="true" />
                 ) : (
                   <span className={`h-1.5 w-1.5 rounded-full ${isScanning ? "vn-pulse-soft" : ""}`} style={{ background: color }} aria-hidden="true" />
                 )}

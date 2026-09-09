@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const NAV_LINKS = [
-  { href: "/#product", label: "Product" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/demo", label: "Live Demo" },
-  { href: "/#technology", label: "Technology" },
-  { href: "/#about", label: "About" },
+  { href: "/#product", label: "Workflow" },
+  { href: "/how-it-works", label: "4 Layers" },
+  { href: "/demo", label: "Security Console" },
+  { href: "/#technology", label: "Matrix Benchmark" },
+  { href: "/#languages", label: "India Roadmap" },
 ];
 
 export default function SiteNavbar() {
@@ -25,20 +25,25 @@ export default function SiteNavbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${
         scrolled
-          ? "border-b border-vn-border bg-white/90 backdrop-blur-xl shadow-sm shadow-vn-navy/5"
-          : "bg-white/60 backdrop-blur-md"
+          ? "border-b border-vn-border bg-white/95 backdrop-blur-md shadow-sm"
+          : "border-b border-vn-border-light bg-white/80 backdrop-blur-sm"
       }`}
     >
-      <div className="vn-container flex items-center justify-between gap-4 py-3">
+      <div className="vn-container flex items-center justify-between gap-4 py-2.5">
         <Link href="/" className="flex items-center gap-2.5" aria-label="VAANISHIELD home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-vn-navy text-white shadow-sm">
-            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+          <span className="flex h-8 w-8 items-center justify-center rounded border border-vn-border bg-vn-navy text-white shadow-sm">
+            <ShieldCheck className="h-4 w-4 text-vn-blue" aria-hidden="true" />
           </span>
-          <span className="font-mono text-base font-bold tracking-wide text-vn-navy">
-            VAANISHIELD
-          </span>
+          <div className="flex flex-col">
+            <span className="font-mono text-sm font-bold tracking-wider text-vn-navy">
+              VAANISHIELD
+            </span>
+            <span className="font-mono text-[9px] font-semibold text-vn-muted leading-none">
+              SIH26104 DEFENSE MATRIX
+            </span>
+          </div>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
@@ -46,7 +51,7 @@ export default function SiteNavbar() {
             <Link
               key={link.label}
               href={link.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-vn-secondary transition-colors hover:text-vn-navy hover:bg-vn-surface-blue"
+              className="rounded-md px-3 py-1.5 font-mono text-xs font-semibold text-vn-secondary transition-colors hover:bg-vn-surface-blue hover:text-vn-navy"
             >
               {link.label}
             </Link>
@@ -56,16 +61,16 @@ export default function SiteNavbar() {
         <div className="flex items-center gap-2">
           <Link
             href="/demo"
-            className="hidden rounded-xl bg-vn-navy px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep hover:shadow-md sm:inline-flex"
+            className="hidden rounded-md bg-vn-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-vn-navy-deep sm:inline-flex"
           >
-            Run a Safety Check
+            Launch Console
           </Link>
           <button
             type="button"
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}
-            className="rounded-lg border border-vn-border bg-white p-2 text-vn-navy md:hidden"
+            className="rounded-md border border-vn-border bg-white p-2 text-vn-navy md:hidden"
           >
             {open ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
           </button>
@@ -75,15 +80,15 @@ export default function SiteNavbar() {
       {open && (
         <nav
           aria-label="Mobile"
-          className="border-t border-vn-border bg-white px-4 py-3 backdrop-blur-xl md:hidden"
+          className="border-t border-vn-border bg-white px-4 py-3 shadow-md md:hidden"
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 font-mono text-xs">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-vn-secondary transition-colors hover:text-vn-navy hover:bg-vn-surface-blue"
+                className="rounded-md px-3 py-2 text-vn-secondary hover:bg-vn-surface-blue hover:text-vn-navy"
               >
                 {link.label}
               </Link>
@@ -91,9 +96,9 @@ export default function SiteNavbar() {
             <Link
               href="/demo"
               onClick={() => setOpen(false)}
-              className="mt-1 inline-flex items-center justify-center rounded-xl bg-vn-navy px-4 py-2.5 text-sm font-bold text-white"
+              className="mt-2 inline-flex items-center justify-center rounded-md bg-vn-navy px-4 py-2.5 font-bold text-white"
             >
-              Run a Safety Check
+              Launch Console
             </Link>
           </div>
         </nav>

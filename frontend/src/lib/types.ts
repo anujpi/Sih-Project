@@ -16,6 +16,9 @@ export interface VoiceAuthenticityResult {
 export interface IdentityVerificationResult {
   similarity_score: number;
   identity_match: boolean;
+  source?: "registry" | "reference_audio";
+  claimed_identity?: string;
+  warning?: string;
 }
 
 export interface IntentAnalysisResult {
@@ -43,6 +46,11 @@ export interface AnalysisResponse {
   identity_verification: IdentityVerificationResult | null;
   intent_analysis: IntentAnalysisResult;
   risk: RiskResult;
+  identity_warning?: string;
+}
+
+export interface Voiceprint {
+  name: string;
 }
 
 export interface RecentAnalysis {
